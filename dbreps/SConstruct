@@ -1,0 +1,3 @@
+from glob import glob
+StaticLibrary('dbreps.a', source=glob('*.c'), CFLAGS='-O3')
+
