@@ -16,5 +16,7 @@ StaticLibrary(target='qform',
 
 SConscript('dbreps/SConstruct')
 SConscript('tests/SConstruct')
+SConscript('timing/cubing/SConstruct')
+SConscript('timing/qforms/SConstruct')
 
 
