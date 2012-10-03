@@ -3,7 +3,6 @@
  * 
  * Binary Quadratic Form Group Descriptor.
  */
-
 #pragma once
 #ifndef QFORM_GROUP__INCLUDED
 #define QFORM_GROUP__INCLUDED
@@ -11,7 +10,7 @@
 #include <gmp.h>
 #include <stdlib.h>
 
-#include "group.h"
+#include "liboptarith/group.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,16 +27,16 @@ typedef int qform_is_ambiguous_f(qform_group_t* group, const qform_t* form);
 typedef int qform_split_ambiguous_f(qform_group_t* group, mpz_t d, const mpz_t N, const qform_t* form);
 
 struct qform_group_struct {
-    // 'group' must be the first member of the struct.
-    group_t group;
-
-    int discriminant_max_bits;
-    qform_group_clear_f* clear;
-    qform_group_set_discriminant_f* set_discriminant;
-    qform_reduce_f* reduce;
-    qform_is_primeform_f* is_primeform;
-    qform_is_ambiguous_f* is_ambiguous;
-    qform_split_ambiguous_f* split_ambiguous;
+  // 'group' must be the first member of the struct.
+  group_t group;
+  
+  int discriminant_max_bits;
+  qform_group_clear_f* clear;
+  qform_group_set_discriminant_f* set_discriminant;
+  qform_reduce_f* reduce;
+  qform_is_primeform_f* is_primeform;
+  qform_is_ambiguous_f* is_ambiguous;
+  qform_split_ambiguous_f* split_ambiguous;
 };
 
 /**
