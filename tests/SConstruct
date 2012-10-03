@@ -1,0 +1,24 @@
+from glob import glob
+import os
+
+libs = []
+
+source_files = glob('*.c')
+source_files += ['../../libqform/libqform.a']
+source_files += ['../../liboptarith/liboptarith.a']
+
+if os.path.isfile('/usr/local/lib/libgmp.a'):
+    source_files.append('/usr/local/lib/libgmp.a')
+elif os.path.isfile('/usr/lib/libgmp.a'):
+    source_files.append('/usr/lib/libgmp.a')
+else:
+    libs.append('gmp')
+	
+cpppath = ['../..']
+
+Program(target='test_qforms',
+        source=source_files,
+        CPPPATH=cpppath,
+        CCFLAGS=["-O3", "-Wall", "-Werror", "-DNDEBUG"],
+        LIBS=libs)
+	

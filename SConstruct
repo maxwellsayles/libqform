@@ -15,4 +15,6 @@ StaticLibrary(target='qform',
               CCFLAGS=ccflags)
 
 SConscript('dbreps/SConstruct')
+SConscript('tests/SConstruct')
+
 
