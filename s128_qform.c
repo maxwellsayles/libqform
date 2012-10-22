@@ -1061,4 +1061,8 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
   s128_qform_reduce(group, R);
 }
 
-
+void s128_qform_print(s128_qform_group_t* group, const s128_qform_t* form) {
+  char cbuffer[41];
+  to_decstr_s128(cbuffer, 40, &form->c);
+  printf("Qfb(%"PRId64", %"PRId64", %s)", form->a, form->b, cbuffer);
+}

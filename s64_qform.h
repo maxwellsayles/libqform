@@ -11,7 +11,6 @@
 #define S64_QFORM__INCLUDED
 
 #include <gmp.h>
-#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -51,7 +50,7 @@ static inline void s64_qform_inverse(s64_qform_group_t* group, s64_qform_t* form
 void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t* A, const s64_qform_t* B);
 void s64_qform_square(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t* A);
 void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t* A);
-static inline void s64_qform_print(s64_qform_group_t* group, const s64_qform_t* form);
+void s64_qform_print(s64_qform_group_t* group, const s64_qform_t* form);
 
 void s64_qform_reduce(s64_qform_group_t* group, s64_qform_t* form);
 int s64_qform_is_primeform(s64_qform_group_t* group, s64_qform_t* form, const int p);
@@ -92,10 +91,6 @@ static inline void s64_qform_inverse(s64_qform_group_t* group, s64_qform_t* form
   if (form->a != form->b && form->a != form->c) {
     form->b = -form->b;
   }
-}
-
-static inline void s64_qform_print(s64_qform_group_t* group, const s64_qform_t* form) {
-  printf("Qfb(%"PRId32", %"PRId32", %"PRId64")", form->a, form->b, form->c);
 }
 
 static inline int s64_qform_is_ambiguous(s64_qform_group_t* group, const s64_qform_t* form) {

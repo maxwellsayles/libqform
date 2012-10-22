@@ -51,11 +51,11 @@ typedef struct {
   mpz_qform_compose_t compose; // nucomp, nudupl, nucube
 } mpz_qform_group_t;
 
-void mpz_qform_group_init(mpz_qform_group_t* this);
-void mpz_qform_group_clear(mpz_qform_group_t* this);
+void mpz_qform_group_init(mpz_qform_group_t* group);
+void mpz_qform_group_clear(mpz_qform_group_t* group);
 
-static inline void mpz_qform_init(mpz_qform_group_t* group, mpz_qform_t* this);
-static inline void mpz_qform_clear(mpz_qform_group_t* group, mpz_qform_t* this);
+static inline void mpz_qform_init(mpz_qform_group_t* group, mpz_qform_t* form);
+static inline void mpz_qform_clear(mpz_qform_group_t* group, mpz_qform_t* form);
 static inline uint32_t mpz_qform_hash32(mpz_qform_group_t* group, const mpz_qform_t* form);
 void mpz_qform_set_id(mpz_qform_group_t* group, mpz_qform_t* form);
 static inline int mpz_qform_is_id(mpz_qform_group_t* group, const mpz_qform_t* form);
@@ -67,7 +67,7 @@ void mpz_qform_square(mpz_qform_group_t* group, mpz_qform_t* R, const mpz_qform_
 void mpz_qform_cube(mpz_qform_group_t* group, mpz_qform_t* R, const mpz_qform_t* A);
 static inline void mpz_qform_print(mpz_qform_group_t* group, const mpz_qform_t* form);
 
-void mpz_qform_group_set_discriminant(mpz_qform_group_t* this, const mpz_t D);
+void mpz_qform_group_set_discriminant(mpz_qform_group_t* group, const mpz_t D);
 void mpz_qform_reduce(mpz_qform_group_t* group, mpz_qform_t* form);
 static inline int mpz_qform_is_ambiguous(mpz_qform_group_t* group, const mpz_qform_t* form);
 int mpz_qform_split_ambiguous(mpz_qform_group_t* group, mpz_t d, const mpz_t N, const mpz_qform_t* form);
@@ -78,16 +78,16 @@ int mpz_qform_is_primeform(mpz_qform_group_t* group, mpz_qform_t* form, const in
  * Inline methods
  */
 
-static inline void mpz_qform_init(mpz_qform_group_t* group, mpz_qform_t* this) {
-  mpz_init(this->a);
-  mpz_init(this->b);
-  mpz_init(this->c);
+static inline void mpz_qform_init(mpz_qform_group_t* group, mpz_qform_t* form) {
+  mpz_init(form->a);
+  mpz_init(form->b);
+  mpz_init(form->c);
 }
 
-static inline void mpz_qform_clear(mpz_qform_group_t* group, mpz_qform_t* this) {
-  mpz_clear(this->a);
-  mpz_clear(this->b);
-  mpz_clear(this->c);
+static inline void mpz_qform_clear(mpz_qform_group_t* group, mpz_qform_t* form) {
+  mpz_clear(form->a);
+  mpz_clear(form->b);
+  mpz_clear(form->c);
 }
 
 static inline uint32_t mpz_qform_hash32(mpz_qform_group_t* group, const mpz_qform_t* form) {

@@ -3,7 +3,6 @@
 #define S128_QFORM__INCLUDED
 
 #include <gmp.h>
-#include <inttypes.h>
 #include <stdint.h>
 
 #include "liboptarith/s128_t.h"
@@ -48,7 +47,7 @@ static inline void s128_qform_inverse(s128_qform_group_t* group, s128_qform_t* f
 void s128_qform_compose(s128_qform_group_t* group, s128_qform_t* R, const s128_qform_t* A, const s128_qform_t* B);
 void s128_qform_square(s128_qform_group_t* group, s128_qform_t* R, const s128_qform_t* A);
 void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qform_t* A);
-static inline void s128_qform_print(s128_qform_group_t* group, const s128_qform_t* form);
+void s128_qform_print(s128_qform_group_t* group, const s128_qform_t* form);
 
 void s128_qform_reduce(s128_qform_group_t* group, s128_qform_t* form);
 int s128_qform_is_primeform(s128_qform_group_t* group, s128_qform_t* form, const int p);
@@ -88,12 +87,6 @@ static inline void s128_qform_inverse(s128_qform_group_t* group, s128_qform_t* f
   if (form->a != form->b && cmp_s128_s64(&form->c, form->a) != 0) {
     form->b = -form->b;
   }
-}
-
-static inline void s128_qform_print(s128_qform_group_t* group, const s128_qform_t* form) {
-  char cbuffer[41];
-  to_decstr_s128(cbuffer, 40, &form->c);
-  printf("Qfb(%"PRId64", %"PRId64", %s)", form->a, form->b, cbuffer);
 }
 
 static inline int s128_qform_is_ambiguous(s128_qform_group_t* group, const s128_qform_t* form) {

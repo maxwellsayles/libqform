@@ -757,6 +757,10 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
   s64_qform_reduce(group, R);
 }
  
+void s64_qform_print(s64_qform_group_t* group, const s64_qform_t* form) {
+  printf("Qfb(%"PRId32", %"PRId32", %"PRId64")", form->a, form->b, form->c);
+}
+
  
  
 
