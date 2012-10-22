@@ -18,122 +18,122 @@ const group_cost_t mpz_qform_costs = {
 /**
  * Initialize a qform group structure
  */
-void mpz_qform_group_init(mpz_qform_group_t* this) {
+void mpz_qform_group_init(mpz_qform_group_t* group) {
   const int nbits = 256;
   
   // initialize group description
-  this->desc.group.elem_init = (group_elem_init_f*)&mpz_qform_init;
-  this->desc.group.elem_clear = (group_elem_clear_f*)&mpz_qform_clear;
-  this->desc.group.elem_size = sizeof(mpz_qform_t);
-  this->desc.group.hash32 = (group_hash32_f*)&mpz_qform_hash32;
-  this->desc.group.set_id = (group_set_id_f*)&mpz_qform_set_id;
-  this->desc.group.is_id = (group_is_id_f*)&mpz_qform_is_id;
-  this->desc.group.set = (group_set_f*)&mpz_qform_set;
-  this->desc.group.equal = (group_equal_f*)&mpz_qform_equal;
-  this->desc.group.inverse = (group_inverse_f*)&mpz_qform_inverse;
-  this->desc.group.compose = (group_compose_f*)&mpz_qform_compose;
-  this->desc.group.square = (group_square_f*)&mpz_qform_square;
-  this->desc.group.cube = (group_cube_f*)&mpz_qform_cube;
-  this->desc.group.print = (group_print_f*)&mpz_qform_print;
+  group->desc.group.elem_init = (group_elem_init_f*)&mpz_qform_init;
+  group->desc.group.elem_clear = (group_elem_clear_f*)&mpz_qform_clear;
+  group->desc.group.elem_size = sizeof(mpz_qform_t);
+  group->desc.group.hash32 = (group_hash32_f*)&mpz_qform_hash32;
+  group->desc.group.set_id = (group_set_id_f*)&mpz_qform_set_id;
+  group->desc.group.is_id = (group_is_id_f*)&mpz_qform_is_id;
+  group->desc.group.set = (group_set_f*)&mpz_qform_set;
+  group->desc.group.equal = (group_equal_f*)&mpz_qform_equal;
+  group->desc.group.inverse = (group_inverse_f*)&mpz_qform_inverse;
+  group->desc.group.compose = (group_compose_f*)&mpz_qform_compose;
+  group->desc.group.square = (group_square_f*)&mpz_qform_square;
+  group->desc.group.cube = (group_cube_f*)&mpz_qform_cube;
+  group->desc.group.print = (group_print_f*)&mpz_qform_print;
   
-  this->desc.discriminant_max_bits = INT_MAX;
-  this->desc.clear = (qform_group_clear_f*)&mpz_qform_group_clear;
-  this->desc.set_discriminant = (qform_group_set_discriminant_f*)&mpz_qform_group_set_discriminant;
-  this->desc.reduce = (qform_reduce_f*)&mpz_qform_reduce;
-  this->desc.is_primeform = (qform_is_primeform_f*)&mpz_qform_is_primeform;
-  this->desc.is_ambiguous = (qform_is_ambiguous_f*)&mpz_qform_is_ambiguous;
-  this->desc.split_ambiguous = (qform_split_ambiguous_f*)&mpz_qform_split_ambiguous;
+  group->desc.discriminant_max_bits = INT_MAX;
+  group->desc.clear = (qform_group_clear_f*)&mpz_qform_group_clear;
+  group->desc.set_discriminant = (qform_group_set_discriminant_f*)&mpz_qform_group_set_discriminant;
+  group->desc.reduce = (qform_reduce_f*)&mpz_qform_reduce;
+  group->desc.is_primeform = (qform_is_primeform_f*)&mpz_qform_is_primeform;
+  group->desc.is_ambiguous = (qform_is_ambiguous_f*)&mpz_qform_is_ambiguous;
+  group->desc.split_ambiguous = (qform_split_ambiguous_f*)&mpz_qform_split_ambiguous;
   
-  mpz_init2(this->D, nbits);
-  mpz_init2(this->S, nbits);
-  mpz_init2(this->L, nbits);
-  mpz_init2(this->t, nbits);
-  mpz_init2(this->m, nbits);
-  mpz_init2(this->n, nbits);
-  
-  // temporaries for reduction
-  mpz_init2(this->reduce.x, nbits);
-  mpz_init2(this->reduce.q, nbits);
-  mpz_init2(this->reduce.r, nbits);
-  
-  // temporaries for composition (nucomp, nudupl, nucube)
-  mpz_init2(this->compose.a1, nbits);
-  mpz_init2(this->compose.b1, nbits);
-  mpz_init2(this->compose.c1, nbits);
-  mpz_init2(this->compose.a2, nbits);
-  mpz_init2(this->compose.b2, nbits);
-  mpz_init2(this->compose.c2, nbits);
-  mpz_init2(this->compose.ss, nbits);
-  mpz_init2(this->compose.m, nbits);
-  mpz_init2(this->compose.SP, nbits);
-  mpz_init2(this->compose.S, nbits);
-  mpz_init2(this->compose.v1, nbits);
-  mpz_init2(this->compose.u2, nbits);
-  mpz_init2(this->compose.v2, nbits);
-  mpz_init2(this->compose.K, nbits);
-  mpz_init2(this->compose.T, nbits);
-  mpz_init2(this->compose.temp, nbits);
-  mpz_init2(this->compose.temp2, nbits);
-  mpz_init2(this->compose.R1, nbits);
-  mpz_init2(this->compose.R2, nbits);
-  mpz_init2(this->compose.C1, nbits);
-  mpz_init2(this->compose.C2, nbits);
-  mpz_init2(this->compose.M1, nbits);
-  mpz_init2(this->compose.M2, nbits);
-  mpz_init2(this->compose.N, nbits);
-  mpz_init2(this->compose.L, nbits);
-  mpz_init2(this->compose.B, nbits);
-  mpz_xgcd_init(&this->compose.gcd, nbits);     
-}
-
-void mpz_qform_group_clear(mpz_qform_group_t* this) {
-  mpz_clear(this->D);
-  mpz_clear(this->S);
-  mpz_clear(this->L);
-  mpz_clear(this->t);
-  mpz_clear(this->m);
-  mpz_clear(this->n);
+  mpz_init2(group->D, nbits);
+  mpz_init2(group->S, nbits);
+  mpz_init2(group->L, nbits);
+  mpz_init2(group->t, nbits);
+  mpz_init2(group->m, nbits);
+  mpz_init2(group->n, nbits);
   
   // temporaries for reduction
-  mpz_clear(this->reduce.x);
-  mpz_clear(this->reduce.q);
-  mpz_clear(this->reduce.r);
+  mpz_init2(group->reduce.x, nbits);
+  mpz_init2(group->reduce.q, nbits);
+  mpz_init2(group->reduce.r, nbits);
   
   // temporaries for composition (nucomp, nudupl, nucube)
-  mpz_clear(this->compose.a1);
-  mpz_clear(this->compose.b1);
-  mpz_clear(this->compose.c1);
-  mpz_clear(this->compose.a2);
-  mpz_clear(this->compose.b2);
-  mpz_clear(this->compose.c2);
-  mpz_clear(this->compose.ss);
-  mpz_clear(this->compose.m);
-  mpz_clear(this->compose.SP);
-  mpz_clear(this->compose.S);
-  mpz_clear(this->compose.v1);
-  mpz_clear(this->compose.u2);
-  mpz_clear(this->compose.v2);
-  mpz_clear(this->compose.K);
-  mpz_clear(this->compose.T);
-  mpz_clear(this->compose.temp);
-  mpz_clear(this->compose.temp2);
-  mpz_clear(this->compose.R1);
-  mpz_clear(this->compose.R2);
-  mpz_clear(this->compose.C1);
-  mpz_clear(this->compose.C2);
-  mpz_clear(this->compose.M1);
-  mpz_clear(this->compose.M2);
-  mpz_clear(this->compose.N);
-  mpz_clear(this->compose.L);
-  mpz_clear(this->compose.B);
-  mpz_xgcd_clear(&this->compose.gcd);     
+  mpz_init2(group->compose.a1, nbits);
+  mpz_init2(group->compose.b1, nbits);
+  mpz_init2(group->compose.c1, nbits);
+  mpz_init2(group->compose.a2, nbits);
+  mpz_init2(group->compose.b2, nbits);
+  mpz_init2(group->compose.c2, nbits);
+  mpz_init2(group->compose.ss, nbits);
+  mpz_init2(group->compose.m, nbits);
+  mpz_init2(group->compose.SP, nbits);
+  mpz_init2(group->compose.S, nbits);
+  mpz_init2(group->compose.v1, nbits);
+  mpz_init2(group->compose.u2, nbits);
+  mpz_init2(group->compose.v2, nbits);
+  mpz_init2(group->compose.K, nbits);
+  mpz_init2(group->compose.T, nbits);
+  mpz_init2(group->compose.temp, nbits);
+  mpz_init2(group->compose.temp2, nbits);
+  mpz_init2(group->compose.R1, nbits);
+  mpz_init2(group->compose.R2, nbits);
+  mpz_init2(group->compose.C1, nbits);
+  mpz_init2(group->compose.C2, nbits);
+  mpz_init2(group->compose.M1, nbits);
+  mpz_init2(group->compose.M2, nbits);
+  mpz_init2(group->compose.N, nbits);
+  mpz_init2(group->compose.L, nbits);
+  mpz_init2(group->compose.B, nbits);
+  mpz_xgcd_init(&group->compose.gcd, nbits);     
 }
 
-void mpz_qform_group_set_discriminant(mpz_qform_group_t* this, const mpz_t D) {
-  mpz_set(this->D, D);
-  mpz_abs(this->S, D);
-  mpz_sqrt(this->S, this->S);
-  mpz_sqrt(this->L, this->S);
+void mpz_qform_group_clear(mpz_qform_group_t* group) {
+  mpz_clear(group->D);
+  mpz_clear(group->S);
+  mpz_clear(group->L);
+  mpz_clear(group->t);
+  mpz_clear(group->m);
+  mpz_clear(group->n);
+  
+  // temporaries for reduction
+  mpz_clear(group->reduce.x);
+  mpz_clear(group->reduce.q);
+  mpz_clear(group->reduce.r);
+  
+  // temporaries for composition (nucomp, nudupl, nucube)
+  mpz_clear(group->compose.a1);
+  mpz_clear(group->compose.b1);
+  mpz_clear(group->compose.c1);
+  mpz_clear(group->compose.a2);
+  mpz_clear(group->compose.b2);
+  mpz_clear(group->compose.c2);
+  mpz_clear(group->compose.ss);
+  mpz_clear(group->compose.m);
+  mpz_clear(group->compose.SP);
+  mpz_clear(group->compose.S);
+  mpz_clear(group->compose.v1);
+  mpz_clear(group->compose.u2);
+  mpz_clear(group->compose.v2);
+  mpz_clear(group->compose.K);
+  mpz_clear(group->compose.T);
+  mpz_clear(group->compose.temp);
+  mpz_clear(group->compose.temp2);
+  mpz_clear(group->compose.R1);
+  mpz_clear(group->compose.R2);
+  mpz_clear(group->compose.C1);
+  mpz_clear(group->compose.C2);
+  mpz_clear(group->compose.M1);
+  mpz_clear(group->compose.M2);
+  mpz_clear(group->compose.N);
+  mpz_clear(group->compose.L);
+  mpz_clear(group->compose.B);
+  mpz_xgcd_clear(&group->compose.gcd);     
+}
+
+void mpz_qform_group_set_discriminant(mpz_qform_group_t* group, const mpz_t D) {
+  mpz_set(group->D, D);
+  mpz_abs(group->S, D);  // Positive sqrt, since negative is undefined.
+  mpz_sqrt(group->S, group->S);
+  mpz_sqrt(group->L, group->S);
 }
 
 // compute c = (b^2-D)/(4a)
