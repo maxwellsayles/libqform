@@ -9,10 +9,6 @@
 #include "liboptarith/mpz_xgcd.h"
 #include "libqform/qform_group.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif 
-
 extern const group_cost_t mpz_qform_costs;
 
 typedef struct {
@@ -128,11 +124,6 @@ static inline void mpz_qform_print(mpz_qform_group_t* group, const mpz_qform_t* 
 static inline int mpz_qform_is_ambiguous(mpz_qform_group_t* group, const mpz_qform_t* form) {
   return (mpz_cmp_ui(form->a,1) > 0 && (mpz_sgn(form->b) == 0 || mpz_cmp(form->a, form->b) == 0 || mpz_cmp(form->a, form->c) == 0));
 }
-
-// extern "C" {
-#ifdef __cplusplus
-}
-#endif
 
 #endif // MPZ_QFORM__INCLUDED
 

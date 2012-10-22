@@ -29,10 +29,6 @@
 #include "libqform/s128_qform.h"
 #include "libqform/s64_qform.h"
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
 typedef struct {
   s64_qform_t s64_qform;
   s128_qform_t s128_qform;
@@ -300,9 +296,5 @@ int gen_qform_is_primeform(gen_qform_group_t* group, gen_qform_t* this, const in
   }
 }
 
-// extern "C"
-#ifdef	__cplusplus
-}
 #endif
 
-#endif

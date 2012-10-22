@@ -12,10 +12,6 @@
 
 #include "liboptarith/group.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef void qform_t;
 typedef struct qform_group_struct qform_group_t;
 
@@ -51,11 +47,6 @@ void qform_random_primeform(qform_group_t* group, qform_t* form);
 int qform_next_primeform(qform_group_t* group,
                          qform_t* form,
                          int prime_index);
-
-// extern "C" {
-#ifdef __cplusplus
-}
-#endif
 
 #endif 
 

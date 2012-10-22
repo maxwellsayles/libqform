@@ -9,10 +9,6 @@
 #include "liboptarith/s128_t.h"
 #include "libqform/qform_group.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern const group_cost_t s128_qform_costs;
 
 #define s128_qform_group_max_bits 118
@@ -103,11 +99,6 @@ static inline void s128_qform_print(s128_qform_group_t* group, const s128_qform_
 static inline int s128_qform_is_ambiguous(s128_qform_group_t* group, const s128_qform_t* form) {
   return form->a > 1 && (form->b == 0 || form->a == form->b || cmp_s64_s128(form->a, &form->c) == 0);
 }
-
-// extern "C" {
-#ifdef __cplusplus
-}
-#endif
 
 #endif // S128_QFORM__INCLUDED
 

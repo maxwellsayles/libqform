@@ -17,10 +17,6 @@
 
 #include "libqform/qform_group.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern const group_cost_t s64_qform_costs;
 
 #define s64_qform_group_max_bits 59
@@ -105,12 +101,6 @@ static inline void s64_qform_print(s64_qform_group_t* group, const s64_qform_t* 
 static inline int s64_qform_is_ambiguous(s64_qform_group_t* group, const s64_qform_t* form) {
   return form->a > 1 && (form->b == 0 || form->a == form->b || form->c == form->a);
 }
-
-// extern "C" {
-#ifdef __cplusplus
-}
-#endif
-
 
 #endif // S64_QFORM__INCLUDED
 
