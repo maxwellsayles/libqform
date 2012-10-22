@@ -6,7 +6,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-#include "liboptarith/s128.h"
+#include "liboptarith/s128_t.h"
 #include "libqform/qform_group.h"
 
 #ifdef __cplusplus

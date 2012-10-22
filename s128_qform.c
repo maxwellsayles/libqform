@@ -15,9 +15,9 @@
 #include "liboptarith/math64.h"
 #include "liboptarith/math_mpz.h"
 #include "liboptarith/primes.h"
-#include "liboptarith/s128.h"
+#include "liboptarith/s128_t.h"
 #include "liboptarith/sqrtmodp_list.h"
-#include "liboptarith/u128.h"
+#include "liboptarith/u128_t.h"
 #include "libqform/mpz_qform.h"
 
 const group_cost_t s128_qform_costs = {
