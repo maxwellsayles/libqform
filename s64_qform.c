@@ -4,7 +4,6 @@
  * compose/square can handle 59 bit discriminants
  * cube can handle 59 bit discriminants
  */
-
 #include "libqform/s64_qform.h"
 
 #include <inttypes.h>
@@ -146,7 +145,6 @@ void s64_qform_set_id(s64_qform_group_t* group, s64_qform_t* form) {
   } else {
     form->b = 1;
   }
-  
   // c = (b*b-D) / (4a)
   form->c = s64_qform_c(group, form->a, form->b);
 }
@@ -217,10 +215,8 @@ int s64_qform_is_primeform(s64_qform_group_t* group, s64_qform_t* form, const in
   
   if ((form->c & 3) == 0) {
     // 4a | b^2-D
-    
     // divide by 4
     form->c >>= 2;
-    
     // divide by a
     form->c /= p;
     return 1;
@@ -240,7 +236,6 @@ int s64_qform_is_primeform(s64_qform_group_t* group, s64_qform_t* form, const in
   
   // divide by a
   form->c /= p;
-  
   return 1;
 }
 
@@ -310,7 +305,6 @@ void s64_qform_reduce(s64_qform_group_t* group, s64_qform_t* form) {
       form->b = -form->b;
     }
     if ((form->b > form->a) || (form->b <= -form->a)) {
-      
       // find r such that -a < r <= a
       // and r = b (mod 2a).
       // q = b/2a = (b/a)/2
@@ -341,9 +335,7 @@ void s64_qform_reduce(s64_qform_group_t* group, s64_qform_t* form) {
       q >>= 1;
       
       form->c -= ((int64_t)q * ((int64_t)form->b + (int64_t)r)) >> 1;
-      
       form->b = r;
-      
       looping = 1;
     }
   }
@@ -412,7 +404,6 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
       a1 /= s;
       a2 /= s;
     }
-    
     u = mulmod_s32(u, z, a1);
     r0 = c2 % a1;
     r1 = mulmod_s32(y, r0, a1);
@@ -439,16 +430,12 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
     
     // partial xgcd
     gcdext_partial_s32((uint32_t*)&r1, (uint32_t*)&r0, &C1, &C0, bound);
-    
     // m1 = (a2*r0 + m12*C0) / a1
     m1 = muladdmul_s64_4s32(a2, r0, m12, C0) / a1;
-    
     // m2 = (p12*r0 - s*C0*c2) / a1
     m2 = ((int64_t)p12 * (int64_t)r0 - (int64_t)s * (int64_t)C0 * c2) / a1;
-    
     // a_{i+1} = r0*m1 - C0*m2
     C->a = r0*m1 - C0*m2;
-    
     // b_{i+1} = (a2*r0 - a*|C1|)/C0 (mod 2a)
     if (C1 >= 0) {
       C1 = -C1;
@@ -510,13 +497,10 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
     r1 = a1;
     r0 = u;
     gcdext_partial_s32((uint32_t*)&r1, (uint32_t*)&r0, &C1, &C0, group->L);
-    
     // m2 = (b1 * r0 - s*C0*c1) / a1
     m2 = ((int64_t)b1 * (int64_t)r0 - (int64_t)s * (int64_t)C0 * c1) / a1;
-
     // a_{i+1} = r0^2 - C0*m2
     C->a = r0*r0 - C0*m2;
-    
     // b_{i+1} = (a1 * r0 - a * |C1|)/C0  (mod 2a)
     if (C1 >= 0) {
       C1 = -C1;
@@ -538,7 +522,6 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
   int32_t a1;
   int32_t b1;
   int64_t c1;
-  
   int32_t SP;
   int32_t v1;
   int32_t N;
@@ -546,12 +529,9 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
   int32_t S, u2, v2;
   int32_t R1, C1, C2;
   int32_t M1, M2;
-  
   int32_t L_32;
   int32_t t1_32, t2_32;
-  
   int64_t temp, temp2;
-  
   int64_t B;
   int64_t L;
   int64_t K;
@@ -583,10 +563,8 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
   if (SP == 1) {
     // N = a
     N = a1;
-    
     // L = a^2
     L = (int64_t)a1 * (int64_t)a1;
-    
     // K = c v1 (v1(b - a c v1) - 2) (mod L)
     if (s64_is_s32(L)) {
       // 32bit modulus
@@ -626,13 +604,10 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
       S = gcdext_s64(&u2_64, &v2_64, temp, temp2);
       v2 = v2_64;
     }
-    
     // N = a/S
     N = a1 / S;
-    
     // L = N a
     L = (int64_t)N * (int64_t)a1;
-    
     // K = -c(v1 u2 a + v2 b) (mod L)
     if (s64_is_s32(L)) {
       // 32bit modulus
@@ -668,25 +643,21 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
   //B >>= 1;
   //B = sqrt_u64(B);
   B >>= ((msb_u64(B)+1)>>1) + 1; // approximate sqrt, (see above two lines)
-  if (B == 0) B = 1;
-  
+  if (B == 0) {
+    B = 1;
+  }
   if (L < B) {
     // compute with regular cubing formula (result will be reduced)
- 
     // T = NK
     T = N * (int32_t)K;
-    
     // R.a = NL
     R->a = N * (int32_t)L;
-    
     // C.b = b + 2 T
     R->b = b1 + (T << 1);
-    
     // C.c = (S c + K (T + b)) / L
     R->c = (K * (T+b1) + c1) / L;
   } else {
     // use NUCOMP formulas
-    
     // Execute partial reduction    
     R2_64 = L;
     R1_64 = K;
@@ -760,7 +731,5 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
 void s64_qform_print(s64_qform_group_t* group, const s64_qform_t* form) {
   printf("Qfb(%"PRId32", %"PRId32", %"PRId64")", form->a, form->b, form->c);
 }
-
- 
  
 

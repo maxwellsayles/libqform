@@ -1,3 +1,6 @@
+/**
+ * GNU MPZ version of qforms
+ */
 #include <limits.h>
 #include <gmp.h>
 #include <stdlib.h>

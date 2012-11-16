@@ -1,7 +1,6 @@
 /**
  * 128bit negative discriminant qforms
  */
-
 #include "libqform/s128_qform.h"
 
 #include <assert.h>
@@ -250,8 +249,7 @@ void s128_qform_set_id(s128_qform_group_t* group, s128_qform_t* form) {
   if ((group->D.v0 & 3) == 0) {
     // D is divisible by four
     form->b = 0;
-  }
-  else {
+  } else {
     form->b = 1;
   }
   s128_qform_c(group, &form->c, form->a, form->b);
@@ -326,11 +324,9 @@ int s128_qform_is_primeform(s128_qform_group_t* group, s128_qform_t* form, const
   
   if ((form->c.v0 & 3) == 0) {
     // 4a | b^2-D
-    
     // divide by 4
     shr_s128(&form->c);
     shr_s128(&form->c);
-    
     // divide by a
     div_s128_s128_s64(&form->c, &form->c, form->a);
     return 1;
@@ -490,7 +486,6 @@ void s128_qform_reduce(s128_qform_group_t* group, s128_qform_t* form) {
       form->b = -form->b;
     }
     if ((form->b > form->a) || (form->b <= -form->a)) {
-      
       // find r such that -a < r <= a
       // and r = b (mod 2a).
       // q = b/2a = (b/a)/2
@@ -762,7 +757,6 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
   int64_t a1;
   int64_t b1;
   s128_t c1;
-  
   int64_t SP;
   int64_t v1;
   int64_t N;
@@ -771,10 +765,8 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
   int64_t S, u2, v2;
   int64_t R1, C1, C2;
   int64_t M1, M2;
-  
   int64_t L_64;
   int64_t t1_64, t2_64;
-  
   s128_t L;
   s128_t K;
   s128_t temp;
@@ -782,7 +774,6 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
   s128_t S_128, u2_128, v2_128;
   s128_t R1_128, R2_128;
   s128_t T_128;
-  
   
   // if A is the identity, return the identity
   if (s128_qform_is_id(group, A)) {
@@ -926,22 +917,19 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
   //sqrt_u128_u128((u128_t*)&temp, (u128_t*)&temp);
   assert64(&temp, "B");
   B = get_s64_from_s128(&temp);
-  if (B == 0) B = 1;
-  
+  if (B == 0) {
+    B = 1;
+  }
   if (cmp_s128_s64(&L, B) < 0) {
     // compute with regular cubing formula (result will be reduced)
-    
     // T = NK
     assert64(&K, "K");
     T = N * get_s64_from_s128(&K);
-    
     // R.a = NL
     assert64(&L, "L");
     R->a = N * get_s64_from_s128(&L);
-    
     // C.b = b + 2 T
     R->b = b1 + (T << 1);
-    
     // C.c = (S c + K (T + b)) / L
     // K is apparently 64bit
     mul_s128_s64_s64(&R->c, get_s64_from_s128(&K), T + b1);
