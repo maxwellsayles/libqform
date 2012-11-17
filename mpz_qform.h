@@ -91,7 +91,11 @@ static inline void mpz_qform_clear(mpz_qform_group_t* group, mpz_qform_t* form) 
 }
 
 static inline uint32_t mpz_qform_hash32(mpz_qform_group_t* group, const mpz_qform_t* form) {
-  // magic number is largest 32-bit unsigned prime.
+  // Magic number is largest 32-bit unsigned prime.
+  // It's important that we only use the a and c components, since
+  // b is redundant, but more importantly, this means that
+  // the form and its inverse hash to the same value
+  // and will get picked up collision detection routines.
   const uint32_t magic = 4294967291UL;
   return (((mpz_get_u32(form->a) * magic) + mpz_get_u32(form->c)) * magic);
 }

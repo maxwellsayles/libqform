@@ -118,7 +118,7 @@ static inline uint32_t half_rshift_u32(uint32_t a) {
 #if defined(__i386) || defined(__x86_64)
   asm("xorl %%ecx, %%ecx\n\t"
       "bsrl %0, %%ecx\n\t"
-      "addl $1, %%ecx\n\t"
+      "addl $1, %%ecx\n\t"  // round up
       "shrl $1, %%ecx\n\t"
       "shrl %%cl, %0"
       : "=rm"(r)
@@ -128,8 +128,7 @@ static inline uint32_t half_rshift_u32(uint32_t a) {
   r >>= ((msb_u32(r) + 1) >> 1;
 #endif
   // should not return 0 since this causes weirdness with partial gcd
-  if (r == 0) return 1;
-  return r;
+  return r == 0 ? 1 : r;
 }
 
 // c = (b^2-D)/(4a)
@@ -279,11 +278,13 @@ int s64_qform_split_ambiguous(s64_qform_group_t* group, mpz_t out_d, const mpz_t
  * Saves the discriminant and computes the fourth root.
  * Assumes that D is negative.
  */
-void s64_qform_group_set_discriminant(s64_qform_group_t* group, const mpz_t in_D) {
+void s64_qform_group_set_discriminant(s64_qform_group_t* group,
+				      const mpz_t in_D) {
   s64_qform_group_set_discriminant_s64(group, mpz_get_s64(in_D));
 }
 
-void s64_qform_group_set_discriminant_s64(s64_qform_group_t* group, const int64_t D) {
+void s64_qform_group_set_discriminant_s64(s64_qform_group_t* group,
+					  const int64_t D) {
   group->D = D;
   group->S = sqrt_u64(abs_s64(D));
   group->L = sqrt_u64(group->S);
