@@ -406,9 +406,8 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
       a2 /= s;
     }
     u = mulmod_s32(u, z, a1);
-    r0 = c2 % a1;
-    r1 = mulmod_s32(y, r0, a1);
-    u = submod_s32(u, r1, a1);
+    int32_t t = mulmod_s32(y, (int32_t)(c2 % a1), a1);
+    u = submod_s32(u, t, a1);
   }
   if (u < 0) {
     u += a1;

@@ -608,9 +608,8 @@ void s128_qform_compose(s128_qform_group_t* group, s128_qform_t* C, const s128_q
     }
     
     u = mulmod_s64(u, z, a1);
-    r0 = mod_s64_s128_s64(&c2, a1);
-    r1 = mulmod_s64(y, r0, a1);
-    u = submod_s64(u, r1, a1);
+    int64_t t = mulmod_s64(y, mod_s64_s128_s64(&c2, a1), a1);
+    u = submod_s64(u, t, a1);
   }
   if (u < 0) {
     u += a1;
