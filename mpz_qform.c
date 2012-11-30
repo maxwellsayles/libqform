@@ -325,8 +325,9 @@ void mpz_qform_reduce(mpz_qform_group_t* group, mpz_qform_t* form) {
 }
 
 /**
- * Computes a reduced ideal equivalent to the product of two ideals
- * using the NUCOMP algorithm of Shanks
+ * NUCOMP algorithm. Adapted from "Solving the Pell Equation"
+ * by Michael J. Jacobson, Jr. and Hugh C. Williams.
+ * http://www.springer.com/mathematics/numbers/book/978-0-387-84922-5
  */
 void mpz_qform_compose(mpz_qform_group_t* group, mpz_qform_t* R, const mpz_qform_t* A, const mpz_qform_t* B) {
   register mpz_qform_compose_t* comp = &group->compose;
@@ -453,8 +454,7 @@ void mpz_qform_compose(mpz_qform_group_t* group, mpz_qform_t* R, const mpz_qform
 }
 
 /**
- * Computes a reduced ideal equivalent to the square of an ideal
- * using the NUCOMP algorithm of Shanks.
+ * NUDUPL. Simplified from compose above.
  */
 void mpz_qform_square(mpz_qform_group_t* group, mpz_qform_t* R, const mpz_qform_t* A) {
   register mpz_qform_compose_t* comp = &group->compose;
@@ -551,8 +551,11 @@ void mpz_qform_square(mpz_qform_group_t* group, mpz_qform_t* R, const mpz_qform_
 }
 
 /**
- * Computes a reduced ideal equivalent to the cube of an ideal
- * using an adaptation of Shanks' NUCOMP algorithm.
+ * Computes a reduced ideal equivalent to the cube of an ideal.
+ * Adapted from "Fast Ideal Cubing in Imaginary Quadratic Number
+ * and Function Fields" by Laurent Imbert, Michael J. Jacobson, Jr. and
+ * Arthur Schmidt.
+ * www.lirmm.fr/~imbert/pdfs/cubing_amc_2010.pdf
  */
 void mpz_qform_cube(mpz_qform_group_t* group, mpz_qform_t* R, const mpz_qform_t* A) {
   register mpz_qform_compose_t* comp = &group->compose;

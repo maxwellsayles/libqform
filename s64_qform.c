@@ -348,7 +348,9 @@ void s64_qform_reduce(s64_qform_group_t* group, s64_qform_t* form) {
 }
 
 /**
- * nucomp algorithm from "Solving the Pell Equation"
+ * NUCOMP algorithm. Adapted from "Solving the Pell Equation"
+ * by Michael J. Jacobson, Jr. and Hugh C. Williams.
+ * http://www.springer.com/mathematics/numbers/book/978-0-387-84922-5
  */
 void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_t* A, const s64_qform_t* B) {
   int32_t a1, a2, b1, b2;
@@ -429,7 +431,7 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
     r0 = u;
     
     // partial xgcd
-    gcdext_partial_s32((uint32_t*)&r1, (uint32_t*)&r0, &C1, &C0, bound);
+    gcdext_partial_s32(&r1, &r0, &C1, &C0, bound);
     // m1 = (a2*r0 + m12*C0) / a1
     m1 = muladdmul_s64_4s32(a2, r0, m12, C0) / a1;
     // m2 = (p12*r0 - s*C0*c2) / a1
@@ -450,7 +452,7 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
 }
  
 /**
- * nudupl, adapted from compose above
+ * NUDPL. Simplified from compose above.
  */
 void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_t* A) {
   int32_t a1, b1;
@@ -496,7 +498,7 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
     // partial xgcd
     r1 = a1;
     r0 = u;
-    gcdext_partial_s32((uint32_t*)&r1, (uint32_t*)&r0, &C1, &C0, group->L);
+    gcdext_partial_s32(&r1, &r0, &C1, &C0, group->L);
     // m2 = (b1 * r0 - s*C0*c1) / a1
     m2 = ((int64_t)b1 * (int64_t)r0 - (int64_t)s * (int64_t)C0 * c1) / a1;
     // a_{i+1} = r0^2 - C0*m2
@@ -515,8 +517,11 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
 }
 
 /**
- * Computes a reduced ideal equivalent to the cube of an ideal
- * using an adaptation of Shanks' NUCOMP algorithm.
+ * Computes a reduced ideal equivalent to the cube of an ideal.
+ * Adapted from "Fast Ideal Cubing in Imaginary Quadratic Number
+ * and Function Fields" by Laurent Imbert, Michael J. Jacobson, Jr. and
+ * Arthur Schmidt.
+ * www.lirmm.fr/~imbert/pdfs/cubing_amc_2010.pdf
  */
 void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t* A) {
   int32_t a1;
@@ -661,7 +666,7 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
     // Execute partial reduction    
     R2_64 = L;
     R1_64 = K;
-    gcdext_partial_s64((uint64_t*)&R2_64, (uint64_t*)&R1_64, &C2_64, &C1_64, B);
+    gcdext_partial_s64(&R2_64, &R1_64, &C2_64, &C1_64, B);
     R1 = R1_64;
     C1 = C1_64;
     C2 = C2_64;

@@ -466,7 +466,6 @@ void s128_qform_group_set_discriminant_s128(s128_qform_group_t* group, const s12
   group->L = get_u64_from_u128((u128_t*)&root);
 }
 
-
 void s128_qform_reduce(s128_qform_group_t* group, s128_qform_t* form) {
 #if !defined(__x86_64)
   s128_t t;
@@ -534,9 +533,14 @@ void s128_qform_reduce(s128_qform_group_t* group, s128_qform_t* form) {
 }
 
 /**
- * nucomp algorithm from "Solving the Pell Equation"
+ * NUCOMP algorithm. Adapted from "Solving the Pell Equation"
+ * by Michael J. Jacobson, Jr. and Hugh C. Williams.
+ * http://www.springer.com/mathematics/numbers/book/978-0-387-84922-5
  */
-void s128_qform_compose(s128_qform_group_t* group, s128_qform_t* C, const s128_qform_t* A, const s128_qform_t* B) {
+void s128_qform_compose(s128_qform_group_t* group,
+			s128_qform_t* C,
+			const s128_qform_t* A,
+			const s128_qform_t* B) {
   int64_t a1, a2, b1, b2;
   s128_t c2;
   int64_t g, s, x, y, z;
@@ -633,7 +637,7 @@ void s128_qform_compose(s128_qform_group_t* group, s128_qform_t* C, const s128_q
     r0 = u;
     
     // partial xgcd
-    gcdext_partial_s64((uint64_t*)&r1, (uint64_t*)&r0, &C1, &C0, bound);
+    gcdext_partial_s64(&r1, &r0, &C1, &C0, bound);
     
     // m1 = (a2 * r0 + m12 * C0)/a1
     m1 = muladdmuldiv_s64(a2, r0, m12, C0, a1);
@@ -666,9 +670,8 @@ void s128_qform_compose(s128_qform_group_t* group, s128_qform_t* C, const s128_q
   s128_qform_reduce(group, C);
 }
 
-
 /**
- * nudupl, adapted from compose above
+ * NUDUPL. Simplified from compose above.
  */
 void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qform_t* A) {
   int64_t a1, b1;
@@ -718,7 +721,7 @@ void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qf
     r0 = u;
     
     // partial xgcd
-    gcdext_partial_s64((uint64_t*)&r1, (uint64_t*)&r0, &C1, &C0, group->L);
+    gcdext_partial_s64(&r1, &r0, &C1, &C0, group->L);
     
     // m2 = (b1 * r0 - s*C0*c1) / a1
     mul_s128_s64_s64(&tmp, b1, r0);
@@ -749,8 +752,11 @@ void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qf
 }
 
 /**
- * Computes a reduced ideal equivalent to the cube of an ideal
- * using an adaptation of Shanks' NUCOMP algorithm.
+ * Computes a reduced ideal equivalent to the cube of an ideal.
+ * Adapted from "Fast Ideal Cubing in Imaginary Quadratic Number
+ * and Function Fields" by Laurent Imbert, Michael J. Jacobson, Jr. and
+ * Arthur Schmidt.
+ * www.lirmm.fr/~imbert/pdfs/cubing_amc_2010.pdf
  */
 void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qform_t* A) {
   int64_t a1;
