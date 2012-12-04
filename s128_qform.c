@@ -69,37 +69,6 @@ static inline int64_t avg_s64(const int64_t a, const int64_t b) {
   return get_s64_from_s128(&t);
 }
 
-// res=(f1*f2+f3*f4)/d
-// NOTE: possible overflow if the result does not fit within 64bits signed
-static inline int64_t muladdmuldiv_s64(const int64_t f1, const int64_t f2, const int64_t f3, const int64_t f4, const int64_t d) {
-  int64_t res;
-#if defined(__x86_64)
-  asm("movq %1, %%rax\n"
-      "imulq %2\n"
-      "movq %%rax, %%r10\n"
-      "movq %3, %%rax\n"
-      "movq %%rdx, %%r11\n"
-      "imulq %4\n"
-      "addq %%r10, %%rax\n"
-      "adcq %%r11, %%rdx\n"
-      "idivq %5\n"
-      : "=&a"(res)
-      : "rm"(f1), "rm"(f2), "rm"(f3), "rm"(f4), "rm"(d)
-      : "rdx", "r10", "r11", "cc");
-#else
-  s128_t t1;
-  s128_t t2;
-  s128_t q;
-  mul_s128_s64_s64(&t1, f1, f2);
-  mul_s128_s64_s64(&t2, f3, f4);
-  add_s128_s128(&t1, &t2);
-  div_s128_s128_s64(&q, &t1, d);
-  assert64(&q, "q");
-  res = get_s64_from_s128(&q);
-#endif
-  return res;
-}
-
 // c=(b^2-D)/(4a)
 static inline void s128_qform_c(const s128_qform_group_t* group, s128_t* c, int64_t a, int64_t b) {
   s128_t t;
@@ -439,9 +408,7 @@ void s128_qform_group_clear(s128_qform_group_t* group) {
  */
 void s128_qform_group_set_discriminant(s128_qform_group_t* group, const mpz_t D) {
   s128_t root;
-  
   mpz_get_s128(&group->D, D);
-  
   // compute roots
   abs_s128_s128(&root, &group->D);
   sqrt_s128_s128(&root, &root);
@@ -472,35 +439,31 @@ void s128_qform_reduce(s128_qform_group_t* group, s128_qform_t* form) {
 #endif
   int64_t q;
   int64_t r;
-  int looping = 1;
   
   // First make sure form is positive definite
-  while (looping) {
-    looping = 0;
+  while (1) {
     if (cmp_s64_s128(form->a, &form->c) > 0) {
-      // swap a and c and invert b
+      // Swap a and c and invert b.
       r = form->a;
       form->a = (int64_t)form->c.v0;
       set_s128_s64(&form->c, r);
       form->b = -form->b;
     }
     if ((form->b > form->a) || (form->b <= -form->a)) {
-      // find r such that -a < r <= a
+      // Find r such that -a < r <= a
       // and r = b (mod 2a).
       // q = b/2a = (b/a)/2
       // r = b%2a = (b%a) +- a*((b/a)%2)
-      // where '/' is divide with floor
+      // where '/' is divide with floor.
       divrem_s64(&q, &r, form->b, form->a);
-      if (q&1) {
-	if (r <= 0) {
-	  r += form->a;
-	  -- q;
-	}
-	else {
-	  r -= form->a;
-	  ++ q;
-	}
-      }
+      // Add/sub 1 to q while bringing r closer to 0.
+      int64_t qm = -(q & 1);       // qm = q & 1 ? -1 : 0;
+      int64_t rm = (r <= 0) - 1;   // rm = r <= 0 ? 0 : -1;
+      int64_t am = form->a >> 63;  // am = a < 0 ? -1 : 0;
+      int64_t m = am ^ rm;
+      r += ((form->a ^ m) - m) & qm;
+      q -= (m | 1) & qm;
+      // q/= 2;
       q >>= 1;
       
       // c -= (q * (b+r)) / 2
@@ -512,8 +475,8 @@ void s128_qform_reduce(s128_qform_group_t* group, s128_qform_t* form) {
 	  "rcrq $1, %%rax\n"
 	  "subq %%rax, %1\n"
 	  "sbbq %%rdx, %0\n"
-	  : "=rm"(form->c.v1), "=rm"(form->c.v0)
-	  : "0"(form->c.v1), "1"(form->c.v0), "rm"(q), "rm"(form->b), "rm"(r)
+	  : "=r"(form->c.v1), "=r"(form->c.v0)
+	  : "0"(form->c.v1), "1"(form->c.v0), "r"(q), "r"(form->b), "r"(r)
 	  : "cc", "rax", "rdx");
 #else
       mul_s128_s64_s64(&t, q, form->b+r);
@@ -522,7 +485,8 @@ void s128_qform_reduce(s128_qform_group_t* group, s128_qform_t* form) {
 #endif
             
       form->b = r;
-      looping = 1;
+    } else {
+      break;
     }
   }
   
@@ -578,7 +542,7 @@ void s128_qform_compose(s128_qform_group_t* group,
     return;
   }
   
-  // Local copies
+  // Make sure Norm(A) > Norm(B).
   if (A->a > B->a) {
     a1 = A->a;
     b1 = A->b;
@@ -615,13 +579,10 @@ void s128_qform_compose(s128_qform_group_t* group,
     int64_t t = mulmod_s64(y, mod_s64_s128_s64(&c2, a1), a1);
     u = submod_s64(u, t, a1);
   }
-  if (u < 0) {
-    u += a1;
-  }
+  u += a1 & (u >> 63);  // if (u < 0) u += a1;
   
   // compute bounds
   bound = half_rshift_u64(a1/a2) * group->L;
-  
   if (a1 <= bound) {
     // normal composition
     C->a = a1*a2;
@@ -657,15 +618,11 @@ void s128_qform_compose(s128_qform_group_t* group,
     C->a = get_s64_from_s128(&tmp);
     
     // b_{i+1}= (a2*r0 - a*|C1|) / C0  (mod 2a)
-    if (C1 >= 0) {
-      C1 = -C1;
-    }
-    muladdmul_s128_4s64(&tmp, a2, r0, C->a, C1);
+    muladdmul_s128_4s64(&tmp, a2, r0, -C->a, abs_s64(C1));
     div_s128_s128_s64(&tmp, &tmp, C0);
     u = mod_s64_s128_u64(&tmp, C->a << 1);
     C->b = (u - b2) + u; // = 2u -b2; possibly avoids overflow
   }
-  
   s128_qform_c(group, &C->c, C->a, C->b);
   s128_qform_reduce(group, C);
 }
@@ -702,9 +659,7 @@ void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qf
   r0 = mod_s64_s128_s64(&c1, a1);
   r1 = mulmod_s64(y, r0, a1);
   u = -r1;
-  if (u < 0) {
-    u += a1;
-  }
+  u += a1 & (u >> 63);  // if (u < 0) u += a1;
   
   if (a1 <= group->L) {
     // normal composition
@@ -738,10 +693,7 @@ void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qf
     C->a = get_s64_from_s128(&tmp);
     
     // b_{i+1} = (a1 * r0 - a * |C1|)/C0  (mod 2a)
-    if (C1 >= 0) {
-      C1 = -C1;
-    }
-    muladdmul_s128_4s64(&tmp, a1, r0, C->a, C1);
+    muladdmul_s128_4s64(&tmp, a1, r0, -C->a, abs_s64(C1));
     div_s128_s128_s64(&tmp, &tmp, C0);
     u = mod_s64_s128_u64(&tmp, C->a << 1);
     C->b = (u - b1) + u; // = 2u -b2; possibly avoids overflow
@@ -816,8 +768,7 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
       v1 %= L_64;
       if (v1 < -(L_64>>1)) {
 	v1 += L_64;
-      }
-      if (v1 > (L_64>>1)) {
+      } else if (v1 > (L_64>>1)) {
 	v1 -= L_64;
       }
       t2_64 = mod_s64_s128_s64(&c1, L_64);
@@ -910,7 +861,6 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
 	add_s128_s128(&K, &L);
       }
     }
-    
     // C = Sc
     mul_s128_s128_s64(&c1, &c1, S);
   }
@@ -922,9 +872,7 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
   //sqrt_u128_u128((u128_t*)&temp, (u128_t*)&temp);
   assert64(&temp, "B");
   B = get_s64_from_s128(&temp);
-  if (B == 0) {
-    B = 1;
-  }
+  B |= !B;
   if (cmp_s128_s64(&L, B) < 0) {
     // compute with regular cubing formula (result will be reduced)
     // T = NK
@@ -1024,9 +972,7 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
     
     // C.a = (-1)^(i-1) (R1 M1 - C1 M2)
     R->a = R1*M1 - C1*M2;
-    if (C1 > 0) {
-      R->a = -R->a;
-    }
+    R->a = cond_negate_s64(-C1, R->a);
     
     // C.b = 2 (N R1 - C.a C2) / C1 - b (mod 2C.a)
     muladdmul_s128_4s64(&temp2, N, R1, -R->a, C2);
@@ -1042,9 +988,7 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
     assert64(&temp2, "R->b");
     R->b = get_s64_from_s128(&temp2);
     
-    if (R->a < 0) {
-      R->a = -R->a;
-    }
+    R->a = abs_s64(R->a);
     
     // C.c = (C.b^2 - D) / 4 C.a
     s128_qform_c(group, &R->c, R->a, R->b);

@@ -62,77 +62,36 @@ void s64_qform_group_init(s64_qform_group_t* group) {
 }
 
 static inline int32_t avg_s32(const int32_t a, const int32_t b) {
-#if defined(__x86_64) || (defined(__i386) && !defined(__APPLE__))
-  int32_t res;
-  asm("movl %%eax, %%edx\n\t"
-      "movl %%ebx, %%ecx\n\t"
-      "sarl $31, %%edx\n\t"
-      "sarl $31, %%ecx\n\t"
-      "addl %%ebx, %%eax\n\t"
-      "adcl %%ecx, %%edx\n\t"
-      "shrdl $1, %%edx, %%eax\n\t"
-      : "=&a"(res)
-      : "0"(a), "b"(b)
-      : "ecx", "edx", "cc");
-  return res;
-#else
   return ((int64_t)a + (int64_t)b) >> 1;
-#endif
-}
-
-// res=(f1*f2+f3*f4)/d
-static inline int64_t muladdmuldiv_s64(const int64_t f1, const int64_t f2, const int64_t f3, const int64_t f4, const int64_t d) {
-  int64_t res;
-#if defined(__x86_64)
-  asm("movq %1, %%rax\n"
-      "imulq %2\n"
-      "movq %%rax, %%r10\n"
-      "movq %3, %%rax\n"
-      "movq %%rdx, %%r11\n"
-      "imulq %4\n"
-      "addq %%r10, %%rax\n"
-      "adcq %%r11, %%rdx\n"
-      "idivq %5\n"
-      : "=&a"(res)
-      : "rm"(f1), "rm"(f2), "rm"(f3), "rm"(f4), "rm"(d)
-      : "rdx", "r10", "r11", "cc");
-#else
-  s128_t t1;
-  s128_t t2;
-  s128_t q;
-  mul_s128_s64_s64(&t1, f1, f2);
-  mul_s128_s64_s64(&t2, f3, f4);
-  add_s128_s128(&t1, &t2);
-  div_s128_s128_s64(&q, &t1, d);
-  res = get_s64_from_s128(&q);
-#endif
-  return res;
 }
 
 /**
  * r = a >> (size(a)/2) and a > 0
  * r ~  SquareRoot(a)
  */
-static inline uint32_t half_rshift_u32(uint32_t a) {
-  uint32_t r = a;
+static inline uint32_t half_rshift_u32(const uint32_t a) {
+  // Should not return 0 since this causes weirdness with partial GCD.
 #if defined(__i386) || defined(__x86_64)
+  uint32_t r;
   asm("xorl %%ecx, %%ecx\n\t"
       "bsrl %0, %%ecx\n\t"
-      "addl $1, %%ecx\n\t"  // round up
+      "incl %%ecx\n\t"  // round up
       "shrl $1, %%ecx\n\t"
       "shrl %%cl, %0"
-      : "=rm"(r)
-      : "0"(r)
+      : "=r"(r)
+      : "0"(a)
       : "cc", "ecx");
 #else
+  uint32_t r = a;
+  r = a;
   r >>= ((msb_u32(r) + 1) >> 1;
 #endif
-  // should not return 0 since this causes weirdness with partial gcd
-  return r == 0 ? 1 : r;
+  return r | (!r);  // r == 0 ? 1 : r;
 }
 
 // c = (b^2-D)/(4a)
-static inline int64_t s64_qform_c(const s64_qform_group_t* group, int32_t a, int32_t b) {
+static inline int64_t s64_qform_c(const s64_qform_group_t* group,
+				  const int32_t a, const int32_t b) {
   return (((int64_t)b*(int64_t)b - group->D) >> 2) / a;
 }
 
@@ -154,7 +113,9 @@ void s64_qform_set_id(s64_qform_group_t* group, s64_qform_t* form) {
  * Note: -0 mod p is p.  This way we try ambiguous forms.
  * @return 0 if there is no prime form and 1 otherwise.
  */
-int s64_qform_is_primeform(s64_qform_group_t* group, s64_qform_t* form, const int p) {
+int s64_qform_is_primeform(s64_qform_group_t* group,
+			   s64_qform_t* form,
+			   const int p) {
   int Dmodp;
   const short* sqrtp;
   
@@ -243,7 +204,10 @@ int s64_qform_is_primeform(s64_qform_group_t* group, s64_qform_t* form, const in
  * otherwise 0 is returned.
  * Assumes that form is an ambiguous form.
  */
-int s64_qform_split_ambiguous(s64_qform_group_t* group, mpz_t out_d, const mpz_t in_N, const s64_qform_t* form) {
+int s64_qform_split_ambiguous(s64_qform_group_t* group,
+			      mpz_t out_d,
+			      const mpz_t in_N,
+			      const s64_qform_t* form) {
   int64_t m;
   int64_t N = mpz_get_s64(in_N);
   int64_t d;
@@ -294,50 +258,35 @@ void s64_qform_group_set_discriminant_s64(s64_qform_group_t* group,
 void s64_qform_reduce(s64_qform_group_t* group, s64_qform_t* form) {
   int32_t q;
   int32_t r;
-  int looping = 1;
-  
-  while (looping) {
-    looping = 0;
+  while (1) {
     if (form->a > form->c) {
-      // swap a and c and invert b
+      // Swap a and c and invert b.
       r = form->a;
       form->a = form->c;
       form->c = r;
       form->b = -form->b;
     }
     if ((form->b > form->a) || (form->b <= -form->a)) {
-      // find r such that -a < r <= a
+      // Find r such that -a < r <= a
       // and r = b (mod 2a).
       // q = b/2a = (b/a)/2
       // r = b%2a = (b%a) +- a*((b/a)%2)
-      // where '/' is divide with floor
+      // where '/' is divide with floor.
       divrem_s32(&q, &r, form->b, form->a);
-      if (q&1) {
-	if (r <= 0) {
-	  // r is negative
-	  if (form->a > 0) {
-	    r += form->a;
-	    -- q;
-	  } else {
-	    r -= form->a;
-	    ++ q;
-	  }
-	} else {
-	  // r is positive
-	  if (form->a > 0) {
-	    r -= form->a;
-	    ++ q;
-	  } else {
-	    r += form->a;
-	    -- q;
-	  }
-	}
-      }
+      // Add/sub 1 to q while bringing r closer to 0.
+      int32_t qm = -(q & 1);       // qm = q & 1 ? -1 : 0;
+      int32_t rm = (r <= 0) - 1;   // rm = r <= 0 ? 0 : -1;
+      int32_t am = form->a >> 31;  // am = a < 0 ? -1 : 0;
+      int32_t m = am ^ rm;
+      r += ((form->a ^ m) - m) & qm;
+      q -= (m | 1) & qm;
+      // q /= 2;
       q >>= 1;
       
       form->c -= ((int64_t)q * ((int64_t)form->b + (int64_t)r)) >> 1;
       form->b = r;
-      looping = 1;
+    } else {
+      break;
     }
   }
   
@@ -376,7 +325,7 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
     return;
   }
   
-  // Local copies
+  // Make sure N(A) > N(B).
   if (A->a > B->a) {
     a1 = A->a;
     b1 = A->b;
@@ -391,7 +340,7 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
     c2 = A->c;
   }
   
-  // Compute d1=gcd(a1, a2) and u1 such that  $a2 | (d1 - a2 * u1)$
+  // Compute d1=gcd(a1, a2) and u1 such that a2 | (d1 - a2 * u1)
   g = gcdext_left_s32(&x, a2, a1); 
   
   // Compute gcd((b1+b2)/2, g) = s = y * (b1+b2)/2 + z * g
@@ -411,42 +360,32 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
     int32_t t = mulmod_s32(y, (int32_t)(c2 % a1), a1);
     u = submod_s32(u, t, a1);
   }
-  if (u < 0) {
-    u += a1;
-  }
+  u += a1 & (u >> 31);  // if (u < 0) u += a1;
   
   // compute bounds
   bound = (half_rshift_u32(a1/a2)) * group->L;
-  
   if (a1 <= bound) {
     // normal composition
-    C->a = a1*a2;
-    
+    C->a = a1 * a2;
     // C->b = 2*a2*u + b2 (mod 2C->a)
-    tmp64 = ((int64_t)a2*(int64_t)u << 1) + b2;
+    tmp64 = ((int64_t)a2 * (int64_t)u << 1) + b2;
     C->b = mod_s32_s64_u32(tmp64, C->a << 1);
   } else {
-    // nucomp steps
+    // NUCOMP steps
     r1 = a1;
     r0 = u;
-    
-    // partial xgcd
     gcdext_partial_s32(&r1, &r0, &C1, &C0, bound);
     // m1 = (a2*r0 + m12*C0) / a1
     m1 = muladdmul_s64_4s32(a2, r0, m12, C0) / a1;
     // m2 = (p12*r0 - s*C0*c2) / a1
     m2 = ((int64_t)p12 * (int64_t)r0 - (int64_t)s * (int64_t)C0 * c2) / a1;
     // a_{i+1} = r0*m1 - C0*m2
-    C->a = r0*m1 - C0*m2;
+    C->a = r0 * m1 - C0 * m2;
     // b_{i+1} = (a2*r0 - a*|C1|)/C0 (mod 2a)
-    if (C1 >= 0) {
-      C1 = -C1;
-    }
-    tmp64 = muladdmul_s64_4s32(a2, r0, C->a, C1) / C0;
-    tmp64 = (tmp64<<1)-b2;
+    tmp64 = muladdmul_s64_4s32(a2, r0, -C->a, abs_s32(C1)) / C0;
+    tmp64 = (tmp64 << 1) - b2;
     C->b = mod_s32_s64_u32(tmp64, C->a << 1);
   }
-  
   C->c = s64_qform_c(group, C->a, C->b);
   s64_qform_reduce(group, C);
 }
@@ -482,20 +421,16 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
   r0 = c1 % a1;
   r1 = mulmod_s32(y, r0, a1);
   u = -r1;
-  if (u < 0) {
-    u += a1;
-  }
+  u += a1 & (u >> 31);  // if (u < 0) u += a1;
   
   if (a1 <= group->L) {
     // normal composition
     C->a = a1*a1;
-    
     // C->b = 2*a2*u + b2 (mod 2a)
-    tmp64 = ((int64_t)a1*(int64_t)u << 1) + b1;
+    tmp64 = ((int64_t)a1 * (int64_t)u << 1) + b1;
     C->b = mod_s32_s64_u32(tmp64, C->a << 1);
   } else {
-    // nucomp steps
-    // partial xgcd
+    // NUCOMP steps
     r1 = a1;
     r0 = u;
     gcdext_partial_s32(&r1, &r0, &C1, &C0, group->L);
@@ -504,14 +439,10 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
     // a_{i+1} = r0^2 - C0*m2
     C->a = r0*r0 - C0*m2;
     // b_{i+1} = (a1 * r0 - a * |C1|)/C0  (mod 2a)
-    if (C1 >= 0) {
-      C1 = -C1;
-    }
-    tmp64 = muladdmul_s64_4s32(a1, r0, C->a, C1) / C0;
+    tmp64 = muladdmul_s64_4s32(a1, r0, -C->a, abs_s32(C1)) / C0;
     tmp64 = (tmp64<<1) - b1;
     C->b = mod_s32_s64_u32(tmp64, C->a << 1);
   }
-  
   C->c = s64_qform_c(group, C->a, C->b);
   s64_qform_reduce(group, C);
 }
@@ -523,7 +454,8 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
  * Arthur Schmidt.
  * www.lirmm.fr/~imbert/pdfs/cubing_amc_2010.pdf
  */
-void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t* A) {
+void s64_qform_cube(s64_qform_group_t* group,
+		    s64_qform_t* R, const s64_qform_t* A) {
   int32_t a1;
   int32_t b1;
   int64_t c1;
@@ -564,7 +496,6 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
   
   // solve SP = v1 b + u1 a (only need v1)
   SP = gcdext_left_s32(&v1, b1, a1);
-  
   if (SP == 1) {
     // N = a
     N = a1;
@@ -581,9 +512,7 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
       t1_32 = mulmod_s32(b1 - t1_32, v1, L_32) - 2;
       t1_32 = mulmod_s32(t1_32, v1, L_32);
       t1_32 = mulmod_s32(t1_32, t2_32, L_32);
-      if (t1_32 < 0) {
-	t1_32 += L_32;
-      }
+      t1_32 += L_32 & (t1_32 >> 31);  // if (t1_32 < 0) t1_32 += L_32;
       K = t1_32;
     } else {
       // 64bit modulus
@@ -592,9 +521,7 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
       K = mulmod_s64(b1 - K, v1, L) - 2;
       K = mulmod_s64(K, v1, L);
       K = mulmod_s64(K, c1, L);
-      if (K < 0) {
-	K += L;
-      }
+      K += L & (K >> 63);  // if (K < 0) K += L;
     }
   } else {
     // S = u2 (a SP) + v2 (b^2 - ac)
@@ -624,9 +551,7 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
       K = addmod_s32(K, t1_32, L_32);
       t1_32 = (-c1) % L_32;
       K = mulmod_s64(K, t1_32, L_32);
-      if (K < 0) {
-	K += L_32;
-      }
+      K += L_32 & (K >> 63);  // if (K < 0) K += L_32;
     } else {
       // 64bit modulus
       K = mulmod_s64(u2_64, v1, L);
@@ -634,11 +559,8 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
       temp = mulmod_s64(v2, b1, L);
       K = addmod_s64(K, temp, L);
       K = mulmod_s64(K, -c1, L);
-      if (K < 0) {
-	K += L;
-      }
+      K += L & (K >> 63);  // if (K < 0) K += L;
     }
-    
     // C = Sc
     c1 *= S;
   }
@@ -648,9 +570,7 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
   //B >>= 1;
   //B = sqrt_u64(B);
   B >>= ((msb_u64(B)+1)>>1) + 1; // approximate sqrt, (see above two lines)
-  if (B == 0) {
-    B = 1;
-  }
+  B |= !B;  // if (B == 0) B = 1;
   if (L < B) {
     // compute with regular cubing formula (result will be reduced)
     // T = NK
@@ -673,9 +593,7 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
     
     // T = N K (mod L)
     T_64 = mulmod_s64(K, N, L);
-    if (T_64 < 0) {
-      T_64 += L;
-    }
+    T_64 += L & (T_64 >> 63);  // if (T_64 < 0) T_64 += L;
     
     // M1 = (N R1 + T C1) / L
     if (s64_is_s32(T_64)) {
@@ -689,46 +607,28 @@ void s64_qform_cube(s64_qform_group_t* group, s64_qform_t* R, const s64_qform_t*
     
     // C.a = (-1)^(i-1) (R1 M1 - C1 M2)
     R->a = R1*M1 - C1*M2;
-    if (C1 > 0) {
-      R->a = -R->a;
-    }
+    R->a = cond_negate_s32(-C1, R->a);
     
-    // C.b = 2 (N R1 - C.a C2) / C1 - b (mod 2C.a)
+    // C.b = 2 (N R1 - C.a C2) / C1 - b
     temp = muladdmul_s64_4s32(N, R1, -R->a, C2);
     temp <<= 1;
     temp /= C1;
     temp -= b1;
-    temp2 = (int64_t)R->a<<1;
-    temp %= temp2;
-    // temp is the closest remainder to zero
-    if (R->a < 0) {
-      // R->a is negative
-      if (temp < R->a) {
-	temp -= temp2;
-      }
-      if (temp > -R->a) {
-	temp += temp2;
-      }
-    } else {
-      // R->a is positive
-      if (temp < -R->a) {
-	temp += temp2;
-      }
-      if (temp > R->a) {
-	temp -= temp2;
-      }
-    }
-    R->b = temp;
-    
+
     // make R->a positive
-    if (R->a < 0) {
-      R->a = -R->a;
-    }
-    
+    R->a = abs_s32(R->a);
+
+    // Reduce temp (mod 2A) such that |temp| is smallest.
+    temp2 = (int64_t)R->a << 1;
+    temp %= temp2;
+    int64_t mask1 = (temp >> 63) ^ (temp2 >> 63);
+    int64_t mask2 = -(abs_s64(temp) >= R->a);
+    temp -= ((temp2 ^ mask1) - mask1) & mask2;
+    R->b = temp;
+
     // C.c = (C.b^2 - D) / 4 C.a
     R->c = s64_qform_c(group, R->a, R->b);
   }
-  
   // normalize and reduce
   s64_qform_reduce(group, R);
 }

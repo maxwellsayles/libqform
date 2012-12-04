@@ -16,9 +16,9 @@
 #define verbose 0
 #define very_verbose 0
 
-#define qform_groups 100
+#define qform_groups 1000
 #define qform_ops 100
-#define qform_reps 10
+#define qform_reps 100
 
 #define min_bits 16
 #define max_bits 140
@@ -197,7 +197,7 @@ void time_qforms(void) {
 
   // load the cpu for a second
   // this primes the os to give us more time slices
-  cprintf("Priming the CPU for a while...\n");
+  printf("Priming the CPU for a while...\n");
   for (i = min_bits;  i <= s64_qform.desc.discriminant_max_bits;  i ++) {
     time_qform_set(&timings[i], i, (qform_group_t*)&s64_qform);
   }
