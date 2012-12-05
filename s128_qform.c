@@ -617,7 +617,7 @@ void s128_qform_compose(s128_qform_group_t* group,
     assert64(&tmp, "C->a");
     C->a = get_s64_from_s128(&tmp);
     
-    // b_{i+1}= (a2*r0 - a*|C1|) / C0  (mod 2a)
+    // b_{i+1}= 2(a2*r0 - a*|C1|) / C0 - b2  (mod 2a)
     muladdmul_s128_4s64(&tmp, a2, r0, -C->a, abs_s64(C1));
     div_s128_s128_s64(&tmp, &tmp, C0);
     u = mod_s64_s128_u64(&tmp, C->a << 1);

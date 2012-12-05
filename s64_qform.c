@@ -301,7 +301,10 @@ void s64_qform_reduce(s64_qform_group_t* group, s64_qform_t* form) {
  * by Michael J. Jacobson, Jr. and Hugh C. Williams.
  * http://www.springer.com/mathematics/numbers/book/978-0-387-84922-5
  */
-void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_t* A, const s64_qform_t* B) {
+void s64_qform_compose(s64_qform_group_t* group,
+		       s64_qform_t* C,
+		       const s64_qform_t* A,
+		       const s64_qform_t* B) {
   int32_t a1, a2, b1, b2;
   int64_t c2;
   int32_t g, s, x, y, z;
@@ -325,7 +328,7 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
     return;
   }
   
-  // Make sure N(A) > N(B).
+  // Make sure Norm(A) > Norm(B).
   if (A->a > B->a) {
     a1 = A->a;
     b1 = A->b;
@@ -381,7 +384,7 @@ void s64_qform_compose(s64_qform_group_t* group, s64_qform_t* C, const s64_qform
     m2 = ((int64_t)p12 * (int64_t)r0 - (int64_t)s * (int64_t)C0 * c2) / a1;
     // a_{i+1} = r0*m1 - C0*m2
     C->a = r0 * m1 - C0 * m2;
-    // b_{i+1} = (a2*r0 - a*|C1|)/C0 (mod 2a)
+    // b_{i+1} = 2(a2*r0 - a*|C1|)/C0 - b2 (mod 2a)
     tmp64 = muladdmul_s64_4s32(a2, r0, -C->a, abs_s32(C1)) / C0;
     tmp64 = (tmp64 << 1) - b2;
     C->b = mod_s32_s64_u32(tmp64, C->a << 1);
@@ -438,7 +441,7 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
     m2 = ((int64_t)b1 * (int64_t)r0 - (int64_t)s * (int64_t)C0 * c1) / a1;
     // a_{i+1} = r0^2 - C0*m2
     C->a = r0*r0 - C0*m2;
-    // b_{i+1} = (a1 * r0 - a * |C1|)/C0  (mod 2a)
+    // b_{i+1} = 2 * (a1 * r0 - a * |C1|)/C0 - b1 (mod 2a)
     tmp64 = muladdmul_s64_4s32(a1, r0, -C->a, abs_s32(C1)) / C0;
     tmp64 = (tmp64<<1) - b1;
     C->b = mod_s32_s64_u32(tmp64, C->a << 1);
