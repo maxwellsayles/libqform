@@ -280,7 +280,6 @@ void s64_qform_reduce(s64_qform_group_t* group, s64_qform_t* form) {
       int32_t m = am ^ rm;
       r += ((form->a ^ m) - m) & qm;
       q -= (m | 1) & qm;
-      // q /= 2;
       q >>= 1;
       
       form->c -= ((int64_t)q * ((int64_t)form->b + (int64_t)r)) >> 1;
