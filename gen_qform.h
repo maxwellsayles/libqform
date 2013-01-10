@@ -1,16 +1,15 @@
 /**
  * Generic qform class.
- * Dynamically chooses the best set of functions
- * depending on the size of the discriminant.
+ * Dynamically chooses the best set of functions depending on the size of
+ * the discriminant.
  *
- * We want to do allocation and initialization once only.
- * Therefore, the generic qform code should be more like the sanity qform code
- * in that it allocates and initializes each of s64, s128, and mpz
- * and then dispatches to the desired routine based on the size of the
- * discriminant.  There is a little bit of overhead in terms of memory and
- * speed since each qform must allocate memory for s64, s128, and mpz types
- * and the code for each operation must branch depending on the size of the
- * discriminant.
+ * We want to do allocation and initialization once only. Therefore, the
+ * generic qform code should be more like the sanity qform code in that it
+ * allocates and initializes each of s64, s128, and mpz and then dispatches
+ * to the desired routine based on the size of the discriminant.  There is
+ * a little bit of overhead in terms of memory and speed since each qform
+ * must allocate memory for s64, s128, and mpz types and the code for each
+ * operation must branch depending on the size of the discriminant.
  */
 
 #pragma once
