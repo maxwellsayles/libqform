@@ -82,7 +82,7 @@ static inline uint32_t s64_qform_hash32(s64_qform_group_t* group, const s64_qfor
   // It's important that we only use the a and c components, since
   // b is redundant, but more importantly, this means that
   // the form and its inverse hash to the same value
-  // and will get picked up collision detection routines.
+  // and will get picked up by collision detection routines.
   const uint32_t magic = 4294967291UL;
   return (((uint32_t)form->a * magic) + (uint32_t)form->c) * magic;
 }
