@@ -62,6 +62,9 @@ const group_cost_t s128_qform_costs = {
 //#define gcdext_shortpartial_s128(R1, R0, C1, C0, bound) gcdext_shortpartial_divrem_s128(R1, R0, C1, C0, bound)
 
 static inline int64_t avg_s64(const int64_t a, const int64_t b) {
+  // This can't be optimized into an addq/rcrq.
+  // Suppose a = 10000000b and b = 01111111b.
+  // Then the result is 01111111b when it should be 11111111b.
   s128_t t;
   set_s128_s64(&t, a);
   add_s128_s64(&t, b);
@@ -229,7 +232,9 @@ void s128_qform_set_id(s128_qform_group_t* group, s128_qform_t* form) {
  * Tests b = +/- sqrt(D) mod p.
  * Note: -0 mod p is p.  This way we try ambiguous forms.
  */
-int s128_qform_is_primeform(s128_qform_group_t* group, s128_qform_t* form, const int p) {
+int s128_qform_is_primeform(s128_qform_group_t* group,
+			    s128_qform_t* form,
+			    const int p) {
   int Dmodp;
   const short* sqrtp;
   
@@ -258,7 +263,6 @@ int s128_qform_is_primeform(s128_qform_group_t* group, s128_qform_t* form, const
   
   // We know that p | b^2-D for +/- b.
   // Compute c = (b^2 - d) / (4a) if possible.
-  
   if (p == 2) {
     // special case if p == 2
     mul_s128_s64_s64(&form->c, form->b, form->b);
@@ -328,7 +332,6 @@ int s128_qform_split_ambiguous(s128_qform_group_t* group, mpz_t out_d, const mpz
   s128_t m;
   s128_t d;
   s128_t N;
-  
   mpz_get_s128(&N, in_N);
   
   // ambiguous forms are of three types
