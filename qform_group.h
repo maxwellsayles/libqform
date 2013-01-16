@@ -12,6 +12,7 @@
 
 #include "liboptarith/closest_23.h"
 #include "liboptarith/group.h"
+#include "liboptarith/group_pow.h"
 
 typedef void qform_t;
 typedef struct qform_group_struct qform_group_t;
@@ -52,6 +53,22 @@ void qform_random_primeform(qform_group_t* group, qform_t* form);
 int qform_next_primeform(qform_group_t* group,
                          qform_t* form,
                          int prime_index);
+
+/**
+ * Exponentiates the high 16 bits using a precomputed 2,3 rep and then
+ * exponentiates the remainder using left-to-right binary exponentiation.
+ *
+ * We use binary rather than a left-to-right NAF since the NAF requires
+ * some precomputation when used left-to-right.
+ *
+ * @param R is the result.
+ * @param A is the base.
+ * @param exp is the exponent.
+ */
+void qform_pow_u32(group_pow_t* pow,
+		   qform_t* R,
+		   const qform_t* A,
+		   uint32_t exp);
 
 #endif 
 
