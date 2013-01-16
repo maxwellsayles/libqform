@@ -18,6 +18,7 @@
 #include "liboptarith/math_mpz.h"
 #include "liboptarith/primes.h"
 #include "liboptarith/sqrtmodp_list.h"
+#include "libqform/dbreps/s64_pow_reps.h"
 #include "libqform/mpz_qform.h"
 
 const group_cost_t s64_qform_costs = {
@@ -59,6 +60,9 @@ void s64_qform_group_init(s64_qform_group_t* group) {
   group->desc.is_primeform = (qform_is_primeform_f*)&s64_qform_is_primeform;
   group->desc.is_ambiguous = (qform_is_ambiguous_f*)&s64_qform_is_ambiguous;
   group->desc.split_ambiguous = (qform_split_ambiguous_f*)&s64_qform_split_ambiguous;
+
+  group->desc.pow_rep_sizes = s64_pow_rep_sizes;
+  group->desc.pow_reps = s64_pow_reps;
 }
 
 static inline int32_t avg_s32(const int32_t a, const int32_t b) {

@@ -17,6 +17,7 @@
 #include "liboptarith/s128_t.h"
 #include "liboptarith/sqrtmodp_list.h"
 #include "liboptarith/u128_t.h"
+#include "libqform/dbreps/s128_pow_reps.h"
 #include "libqform/mpz_qform.h"
 
 const group_cost_t s128_qform_costs = {
@@ -391,6 +392,9 @@ void s128_qform_group_init(s128_qform_group_t* group) {
   group->desc.is_ambiguous = (qform_is_ambiguous_f*)&s128_qform_is_ambiguous;
   group->desc.split_ambiguous = (qform_split_ambiguous_f*)&s128_qform_split_ambiguous;
   
+  group->desc.pow_rep_sizes = s128_pow_rep_sizes;
+  group->desc.pow_reps = s128_pow_reps;
+
   mpz_init(group->tmp);
   mpz_init(group->tmp2);
   mpz_init(group->tmp3);

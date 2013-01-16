@@ -10,6 +10,7 @@
 #include "liboptarith/mpz_xgcd.h"
 #include "liboptarith/primes.h"
 #include "liboptarith/sqrtmodp_list.h"
+#include "libqform/dbreps/mpz_pow_reps.h"
 #include "libqform/mpz_qform.h"
 
 const group_cost_t mpz_qform_costs = {
@@ -47,6 +48,9 @@ void mpz_qform_group_init(mpz_qform_group_t* group) {
   group->desc.is_ambiguous = (qform_is_ambiguous_f*)&mpz_qform_is_ambiguous;
   group->desc.split_ambiguous = (qform_split_ambiguous_f*)&mpz_qform_split_ambiguous;
   
+  group->desc.pow_rep_sizes = mpz_pow_rep_sizes;
+  group->desc.pow_reps = mpz_pow_reps;
+
   mpz_init2(group->D, nbits);
   mpz_init2(group->S, nbits);
   mpz_init2(group->L, nbits);

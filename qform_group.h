@@ -10,6 +10,7 @@
 #include <gmp.h>
 #include <stdlib.h>
 
+#include "liboptarith/closest_23.h"
 #include "liboptarith/group.h"
 
 typedef void qform_t;
@@ -33,6 +34,10 @@ struct qform_group_struct {
   qform_is_primeform_f* is_primeform;
   qform_is_ambiguous_f* is_ambiguous;
   qform_split_ambiguous_f* split_ambiguous;
+
+  // Precomputed 2,3 representations for uint16_t.
+  int* pow_rep_sizes;
+  factored_two_three_term16_t** pow_reps;
 };
 
 /**
