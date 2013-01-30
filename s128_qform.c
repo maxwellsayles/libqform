@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "liboptarith/gcdext_binary_l2r.h"
+#include "liboptarith/gcd_binary_l2r.h"
 #include "liboptarith/math64.h"
 #include "liboptarith/math_mpz.h"
 #include "liboptarith/primes.h"
@@ -49,18 +49,12 @@ const group_cost_t s128_qform_costs = {
 #endif
 
 
-// gcd defines
-#define gcdext_s64(s, t, u, v) gcdext_binary_l2r_s64(s, t, u, v)
-#define gcdext_left_s64(s, u, v) gcdext_binary_l2r_s64(s, 0, u, v)
-#define gcdext_partial_s64(R1, R0, C1, C0, bound) gcdext_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
-#define gcdext_s128(g, s, t, u, v) gcdext_binary_l2r_s128(g, s, t, u, v)
-#define gcdext_shortpartial_s128(R1, R0, C1, C0, bound) gcdext_shortpartial_binary_l2r_s128(R1, R0, C1, C0, bound)
-
-//#define gcdext_s64(s, t, u, v) gcdext_divrem_s64(s, t, u, v)
-//#define gcdext_left_s64(s, u, v) gcdext_left_divrem_s64(s, u, v)
-//#define gcdext_partial_s64(R1, R0, C1, C0, bound) gcdext_partial_divrem_s64(R1, R0, C1, C0, bound)
-//#define gcdext_s128(g, s, t, u, v) gcdext_divrem_s128(g, s, t, u, v)
-//#define gcdext_shortpartial_s128(R1, R0, C1, C0, bound) gcdext_shortpartial_divrem_s128(R1, R0, C1, C0, bound)
+// Actual GCD methods to use.
+#define xgcd_s64(s, t, u, v) xgcd_binary_l2r_s64(s, t, u, v)
+#define xgcd_left_s64(s, u, v) xgcd_binary_l2r_s64(s, 0, u, v)
+#define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
+#define xgcd_s128(g, s, t, u, v) xgcd_binary_l2r_s128(g, s, t, u, v)
+#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_binary_l2r_s128(R1, R0, C1, C0, bound)
 
 static inline int64_t avg_s64(const int64_t a, const int64_t b) {
   // This can't be optimized into an addq/rcrq.
@@ -120,7 +114,7 @@ static inline uint64_t half_rshift_u64(uint64_t a) {
  *  - C_i sequence from "Solving the Pell Equation" defined as
  *     C_{-1}=0, C_{1}=-1  C_i=C_{i-2}-q_i C_{i-1}
  */
-static void gcdext_partial_s128(s128_t* R1, s128_t* R0, s128_t* C1, s128_t* C0, const int64_t bound) {
+static void xgcd_partial_s128(s128_t* R1, s128_t* R0, s128_t* C1, s128_t* C0, const int64_t bound) {
   s128_t q;
   s128_t t128;
   int64_t t;
@@ -173,11 +167,9 @@ static void gcdext_partial_s128(s128_t* R1, s128_t* R0, s128_t* C1, s128_t* C0, 
  *  - R_i = 0 or R_i <= bound < R_{i-1}
  *  - C_i sequence from "Solving the Pell Equation" defined as
  *     C_{-1}=0, C_{1}=-1  C_i=C_{i-2}-q_i C_{i-1}
- *
- * Same as s128_xgcd_partial, but uses 64bit registers for C1,C0
  */
 /*
-static void gcdext_shortpartial_divrem_s128(s128_t* R1, s128_t* R0, int64_t* C1, int64_t* C0, const int64_t bound) {
+static void xgcd_shortpartial_divrem_s128(s128_t* R1, s128_t* R0, int64_t* C1, int64_t* C0, const int64_t bound) {
     s128_t q;
     int64_t t;
     int64_t r0, r1;
@@ -565,7 +557,7 @@ void s128_qform_compose(s128_qform_group_t* group,
   assert(a2 != 0);
   
   // Compute d1=gcd(a1, a2) and u1 such that  $a2 | (d1 - a2 * u1)$
-  g = gcdext_left_s64(&x, a2, a1);
+  g = xgcd_left_s64(&x, a2, a1);
   
   // Compute gcd((b1+b2)/2, g) = s = y * (b1+b2)/2 + z * g
   p12 = avg_s64(b1, b2);
@@ -575,7 +567,7 @@ void s128_qform_compose(s128_qform_group_t* group,
   u = mulmod_s64(x, m12, a1);
   s = 1;
   if (g != 1) {
-    s = gcdext_s64(&y, &z, p12, g);
+    s = xgcd_s64(&y, &z, p12, g);
     if (s != 1) {
       a1 /= s;
       a2 /= s;
@@ -604,7 +596,7 @@ void s128_qform_compose(s128_qform_group_t* group,
     r0 = u;
     
     // partial xgcd
-    gcdext_partial_s64(&r1, &r0, &C1, &C0, bound);
+    xgcd_partial_s64(&r1, &r0, &C1, &C0, bound);
     
     // m1 = (a2 * r0 + m12 * C0)/a1
     m1 = muladdmuldiv_s64(a2, r0, m12, C0, a1);
@@ -659,7 +651,7 @@ void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qf
   // Compute d1=gcd(a1, a2) and u1 such that  $a2 | (d1 - a2 * u1)$
   // Compute gcd((b1+b2)/2, g) = s = y * (b1+b2)/2 + z * g
   // Compute u = x*z*(b1-b2)/2 - y*c mod a1
-  s = gcdext_left_s64(&y, b1, a1);
+  s = xgcd_left_s64(&y, b1, a1);
   a1 /= s;
   
   r0 = mod_s64_s128_s64(&c1, a1);
@@ -682,7 +674,7 @@ void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qf
     r0 = u;
     
     // partial xgcd
-    gcdext_partial_s64(&r1, &r0, &C1, &C0, group->L);
+    xgcd_partial_s64(&r1, &r0, &C1, &C0, group->L);
     
     // m2 = (b1 * r0 - s*C0*c1) / a1
     mul_s128_s64_s64(&tmp, b1, r0);
@@ -756,7 +748,7 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
   c1 = A->c;
   
   // solve SP = v1 b + u1 a (only need v1)
-  SP = gcdext_left_s64(&v1, b1, a1);
+  SP = xgcd_left_s64(&v1, b1, a1);
   
   if (SP == 1) {
     // N = a
@@ -817,11 +809,11 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
     mul_s128_s64_s64(&temp, SP, a1);
     if (s128_is_s64(&temp) && s128_is_s64(&temp2)) {
       // (a*SP) and (b^2-ac) fit into 64bit each
-      S = gcdext_s64(&u2, &v2, get_s64_from_s128(&temp), get_s64_from_s128(&temp2));
+      S = xgcd_s64(&u2, &v2, get_s64_from_s128(&temp), get_s64_from_s128(&temp2));
       set_s128_s64(&u2_128, u2);
     } else {
-      // 128bit gcdext required
-      gcdext_s128(&S_128, &u2_128, &v2_128, &temp, &temp2);
+      // 128bit xgcd required
+      xgcd_s128(&S_128, &u2_128, &v2_128, &temp, &temp2);
       assert64(&S_128, "S");
       assert64(&v2_128, "v2");
       S = get_s64_from_s128(&S_128);
@@ -903,7 +895,7 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
     //  64bit C1,C2).
     set_s128_s128(&R2_128, &L);
     set_s128_s128(&R1_128, &K);
-    gcdext_shortpartial_s128(&R2_128, &R1_128, &C2, &C1, B);
+    xgcd_shortpartial_s128(&R2_128, &R1_128, &C2, &C1, B);
     assert64(&R1_128, "R1");
     R1 = get_s64_from_s128(&R1_128);
     
@@ -911,7 +903,7 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
     // verify that shortpartial gives the right answer
     set_s128_s128(&R2_128, &L);
     set_s128_s128(&R1_128, &K);
-    gcdext_partial_s128(&R2_128, &R1_128, &temp2, &temp, B);
+    xgcd_partial_s128(&R2_128, &R1_128, &temp2, &temp, B);
     assert(cmp_s128_s64(&temp2, C2) == 0);
     assert(cmp_s128_s64(&temp,  C1) == 0);
     assert(cmp_s128_s64(&R1_128, R1) == 0);

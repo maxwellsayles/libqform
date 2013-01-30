@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "liboptarith/gcdext_binary_l2r.h"
+#include "liboptarith/gcd_binary_l2r.h"
 #include "liboptarith/math32.h"
 #include "liboptarith/math64.h"
 #include "liboptarith/math_mpz.h"
@@ -27,12 +27,12 @@ const group_cost_t s64_qform_costs = {
   1.720
 };
 
-#define gcdext_s32(s, t, u, v) gcdext_binary_l2r_s32(s, t, u, v)
-#define gcdext_left_s32(s, u, v) gcdext_binary_l2r_s32(s, 0, u, v)
-#define gcdext_partial_s32(R1, R0, C1, C0, bound) gcdext_partial_binary_l2r_s32(R1, R0, C1, C0, bound)
-#define gcdext_s64(s, t, u, v) gcdext_binary_l2r_s64(s, t, u, v)
-#define gcdext_left_s64(s, u, v) gcdext_binary_l2r_s64(s, 0, u, v)
-#define gcdext_partial_s64(R1, R0, C1, C0, bound) gcdext_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
+#define xgcd_s32(s, t, u, v) xgcd_binary_l2r_s32(s, t, u, v)
+#define xgcd_left_s32(s, u, v) xgcd_binary_l2r_s32(s, 0, u, v)
+#define xgcd_partial_s32(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s32(R1, R0, C1, C0, bound)
+#define xgcd_s64(s, t, u, v) xgcd_binary_l2r_s64(s, t, u, v)
+#define xgcd_left_s64(s, u, v) xgcd_binary_l2r_s64(s, 0, u, v)
+#define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
 
 /**
  * initialize the group
@@ -347,7 +347,7 @@ void s64_qform_compose(s64_qform_group_t* group,
   }
   
   // Compute d1=gcd(a1, a2) and u1 such that a2 | (d1 - a2 * u1)
-  g = gcdext_left_s32(&x, a2, a1); 
+  g = xgcd_left_s32(&x, a2, a1); 
   
   // Compute gcd((b1+b2)/2, g) = s = y * (b1+b2)/2 + z * g
   p12 = avg_s32(b1, b2);
@@ -357,7 +357,7 @@ void s64_qform_compose(s64_qform_group_t* group,
   u = mulmod_s32(x, m12, a1);
   s = 1;
   if (g != 1) {
-    s = gcdext_s32(&y, &z, p12, g);
+    s = xgcd_s32(&y, &z, p12, g);
     if (s != 1) {
       a1 /= s;
       a2 /= s;
@@ -380,7 +380,7 @@ void s64_qform_compose(s64_qform_group_t* group,
     // NUCOMP steps
     r1 = a1;
     r0 = u;
-    gcdext_partial_s32(&r1, &r0, &C1, &C0, bound);
+    xgcd_partial_s32(&r1, &r0, &C1, &C0, bound);
     // m1 = (a2*r0 + m12*C0) / a1
     m1 = muladdmul_s64_4s32(a2, r0, m12, C0) / a1;
     // m2 = (p12*r0 - s*C0*c2) / a1
@@ -421,7 +421,7 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
   // Compute d1=gcd(a1, a2) and u1 such that  $a2 | (d1 - a2 * u1)$
   // Compute gcd((b1+b2)/2, g) = s = y * (b1+b2)/2 + z * g
   // Compute u = x*z*(b1-b2)/2 - y*c mod a1
-  s = gcdext_left_s32(&y, b1, a1);
+  s = xgcd_left_s32(&y, b1, a1);
   a1 /= s;
 
   r0 = c1 % a1;
@@ -439,7 +439,7 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
     // NUCOMP steps
     r1 = a1;
     r0 = u;
-    gcdext_partial_s32(&r1, &r0, &C1, &C0, group->L);
+    xgcd_partial_s32(&r1, &r0, &C1, &C0, group->L);
     // m2 = (b1 * r0 - s*C0*c1) / a1
     m2 = ((int64_t)b1 * (int64_t)r0 - (int64_t)s * (int64_t)C0 * c1) / a1;
     // a_{i+1} = r0^2 - C0*m2
@@ -501,7 +501,7 @@ void s64_qform_cube(s64_qform_group_t* group,
   c1 = A->c;
   
   // solve SP = v1 b + u1 a (only need v1)
-  SP = gcdext_left_s32(&v1, b1, a1);
+  SP = xgcd_left_s32(&v1, b1, a1);
   if (SP == 1) {
     // N = a
     N = a1;
@@ -535,11 +535,11 @@ void s64_qform_cube(s64_qform_group_t* group,
     temp2 = (int64_t)b1 * (int64_t)b1 - (int64_t)a1 * c1;
     if (s64_is_s32(temp) && s64_is_s32(temp2)) {
       // (a*SP) and (b^2-ac) fit into 32bit each
-      S = gcdext_s32(&u2, &v2, temp, temp2);
+      S = xgcd_s32(&u2, &v2, temp, temp2);
       u2_64 = u2;
     } else {
-      // 64bit gcdext required
-      S = gcdext_s64(&u2_64, &v2_64, temp, temp2);
+      // 64bit xgcd required
+      S = xgcd_s64(&u2_64, &v2_64, temp, temp2);
       v2 = v2_64;
     }
     // N = a/S
@@ -592,7 +592,7 @@ void s64_qform_cube(s64_qform_group_t* group,
     // Execute partial reduction    
     R2_64 = L;
     R1_64 = K;
-    gcdext_partial_s64(&R2_64, &R1_64, &C2_64, &C1_64, B);
+    xgcd_partial_s64(&R2_64, &R1_64, &C2_64, &C1_64, B);
     R1 = R1_64;
     C1 = C1_64;
     C2 = C2_64;
