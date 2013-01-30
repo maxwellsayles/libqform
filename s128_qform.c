@@ -26,6 +26,14 @@ const group_cost_t s128_qform_costs = {
   2.129
 };
 
+// Actual GCD methods to use.
+#define xgcd_s64(s, t, u, v) xgcd_binary_l2r_s64(s, t, u, v)
+#define xgcd_left_s64(s, u, v) xgcd_left_binary_l2r_s64(s, u, v)
+#define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
+#define xgcd_s128(g, s, t, u, v) xgcd_binary_l2r_s128(g, s, t, u, v)
+#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_binary_l2r_s128(R1, R0, C1, C0, bound)
+
+
 #ifdef _DEBUG
 #define assert64(t, s) \
   if (!s128_is_s64(t)) {						\
@@ -48,13 +56,6 @@ const group_cost_t s128_qform_costs = {
 #define assert64_mpz(t, s)
 #endif
 
-
-// Actual GCD methods to use.
-#define xgcd_s64(s, t, u, v) xgcd_binary_l2r_s64(s, t, u, v)
-#define xgcd_left_s64(s, u, v) xgcd_binary_l2r_s64(s, 0, u, v)
-#define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
-#define xgcd_s128(g, s, t, u, v) xgcd_binary_l2r_s128(g, s, t, u, v)
-#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_binary_l2r_s128(R1, R0, C1, C0, bound)
 
 static inline int64_t avg_s64(const int64_t a, const int64_t b) {
   // This can't be optimized into an addq/rcrq.
