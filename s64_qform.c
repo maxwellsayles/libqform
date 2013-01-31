@@ -27,9 +27,13 @@ const group_cost_t s64_qform_costs = {
   1.720
 };
 
-#define xgcd_s32(s, t, u, v) xgcd_binary_l2r_s32(s, t, u, v)
-#define xgcd_left_s32(s, u, v) xgcd_left_binary_l2r_s32(s, u, v)
-#define xgcd_partial_s32(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s32(R1, R0, C1, C0, bound)
+#define xgcd_s32(s, t, u, v) xgcd_divrem_s32(s, t, u, v)
+#define xgcd_left_s32(s, u, v) xgcd_left_divrem_s32(s, u, v)
+#define xgcd_partial_s32(R1, R0, C1, C0, bound) xgcd_partial_divrem_s32(R1, R0, C1, C0, bound)
+//#define xgcd_s32(s, t, u, v) xgcd_binary_l2r_s32(s, t, u, v)
+//#define xgcd_left_s32(s, u, v) xgcd_left_binary_l2r_s32(s, u, v)
+//#define xgcd_partial_s32(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s32(R1, R0, C1, C0, bound)
+
 #define xgcd_s64(s, t, u, v) xgcd_binary_l2r_s64(s, t, u, v)
 #define xgcd_left_s64(s, u, v) xgcd_left_binary_l2r_s64(s, u, v)
 #define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)

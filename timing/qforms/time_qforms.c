@@ -13,15 +13,16 @@
 #include "libqform/s128_qform.h"
 #include "libqform/s64_qform.h"
 
-#define verbose 0
+#define verbose 1
 #define very_verbose 0
 
-#define qform_groups 1000
+#define qform_groups 10000
 #define qform_ops 100
-#define qform_reps 100
+#define qform_reps 1
 
 #define min_bits 16
-#define max_bits 140
+#define max_bits 59
+//#define max_bits 140
 #define total_bits (max_bits+1-min_bits)
 
 int rand_seed = 0;
@@ -59,7 +60,9 @@ void write_gnuplot_datfile_u64(const char* filename,
   FILE* f;
   f = fopen(filename, "w");
   for (i = 0;  i < sample_count;  i ++) {
-    fprintf(f, "%"PRIu64", %"PRIu64"\n", x[i], y[i]);
+    fprintf(f, "%"PRIu64", %.5f\n",
+	    x[i],
+	    (double)y[i] / (double)(qform_ops * qform_groups * qform_reps));
   }
   fclose(f);
 }
@@ -147,7 +150,7 @@ void time_qform_set(qform_timings_t* timings, int nbits, qform_group_t* qform_gr
   cprintf("%"PRIu64" us\n", time);
 
   // time cube
-  cprintf("Time for cube: ");
+  cprintf("Time for %dbit cube: ", nbits);
   fflush(stdout);
   gmp_randseed_ui(rands, rand_seed);
   srand(rand_seed);
@@ -197,27 +200,33 @@ void time_qforms(void) {
 
   // load the cpu for a second
   // this primes the os to give us more time slices
+  /*
   printf("Priming the CPU for a while...\n");
   for (i = min_bits;  i <= s64_qform.desc.discriminant_max_bits;  i ++) {
     time_qform_set(&timings[i], i, (qform_group_t*)&s64_qform);
   }
   cprintf("\n");
+  */
 
   for (rep = 0;  rep < qform_reps;  rep ++) {
     printf("Rep %d\n", rep);
     rand_seed = current_nanos();
 
-    for (i = min_bits;  i <= s64_qform.desc.discriminant_max_bits;  i ++) {
+    for (i = min_bits;
+	 i <= s64_qform.desc.discriminant_max_bits && i <= max_bits;
+	 i++) {
       cprintf("Rep %d on s64_qform for %d bit discriminant.\n", rep, i);
       time_qform_set(&timings[i], i, (qform_group_t*)&s64_qform);
       cprintf("\n");
     }
-    for (;  i <= s128_qform.desc.discriminant_max_bits;  i ++) {
+    for (;
+	 i <= s128_qform.desc.discriminant_max_bits && i <= max_bits;
+	 i++) {
       cprintf("Rep %d on s128_qform for %d bit discriminant.\n", rep, i);
       time_qform_set(&timings[i], i, (qform_group_t*)&s128_qform);
       cprintf("\n");
     }
-    for (;  i <= max_bits;  i ++) {
+    for (; i <= max_bits; i++) {
       cprintf("Rep %d on mpz_qform for %d bit discriminant.\n", rep, i);
       time_qform_set(&timings[i], i, (qform_group_t*)&mpz_qform);
       cprintf("\n");
