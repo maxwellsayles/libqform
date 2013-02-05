@@ -5,7 +5,6 @@
  * 
  * These methods are tested to be safe for discriminants up to 59 bits.
  */
-
 #pragma once
 #ifndef S64_QFORM__INCLUDED
 #define S64_QFORM__INCLUDED
@@ -101,5 +100,5 @@ static inline int s64_qform_is_ambiguous(s64_qform_group_t* group, const s64_qfo
   return form->a > 1 && (form->b == 0 || form->a == form->b || form->c == form->a);
 }
 
-#endif // S64_QFORM__INCLUDED
+#endif  // S64_QFORM__INCLUDED
 
