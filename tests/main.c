@@ -174,7 +174,9 @@ void test_pow(void) {
   for (bits = min_bits;  bits <= max_bits;  bits ++) {
     printf("Using a discriminant of %d bits.\n", bits);
     // perform exponentiation
-    for (exp_bits = min_exp_bits;  exp_bits < max_exp_bits;  exp_bits += skip_exp_bits) {
+    for (exp_bits = min_exp_bits;
+	 exp_bits < max_exp_bits;
+	 exp_bits += skip_exp_bits) {
       // Generate a random discriminant.
       mpz_random_semiprime_discriminant(discriminant, rands, bits);
       gmp_printf("Discriminant is %Zd\n", discriminant);
