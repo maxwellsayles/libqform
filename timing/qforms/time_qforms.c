@@ -17,12 +17,11 @@
 #define very_verbose 0
 
 #define qform_groups 10000
-#define qform_ops 100
-#define qform_reps 1
+#define qform_ops 1000
+#define qform_reps 5
 
 #define min_bits 16
-#define max_bits 59
-//#define max_bits 140
+#define max_bits 140
 #define total_bits (max_bits+1-min_bits)
 
 int rand_seed = 0;
@@ -79,7 +78,9 @@ static inline void zero_qform_timings(qform_timings_t* this) {
   this->cube = 0;
 }
 
-void time_qform_set(qform_timings_t* timings, int nbits, qform_group_t* qform_group) {
+void time_qform_set(qform_timings_t* timings,
+		    int nbits,
+		    qform_group_t* qform_group) {
   group_t* group = &qform_group->group;
   gmp_randstate_t rands;
   int i;
@@ -189,27 +190,17 @@ void time_qforms(void) {
   int i;
   int rep;
 
+  s64_qform_group_init(&s64_qform);
+  s128_qform_group_init(&s128_qform);
+  mpz_qform_group_init(&mpz_qform);
+
+  // Zero timings.
   for (i = 0;  i <= max_bits;  i ++) {
     zero_qform_timings(&timings[i]);
     x[i] = i;
   }
 
-  s64_qform_group_init(&s64_qform);
-  s128_qform_group_init(&s128_qform);
-  mpz_qform_group_init(&mpz_qform);
-
-  // load the cpu for a second
-  // this primes the os to give us more time slices
-  /*
-  printf("Priming the CPU for a while...\n");
-  for (i = min_bits;  i <= s64_qform.desc.discriminant_max_bits;  i ++) {
-    time_qform_set(&timings[i], i, (qform_group_t*)&s64_qform);
-  }
-  cprintf("\n");
-  */
-
   for (rep = 0;  rep < qform_reps;  rep ++) {
-    printf("Rep %d\n", rep);
     rand_seed = current_nanos();
 
     for (i = min_bits;
