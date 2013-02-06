@@ -16,15 +16,18 @@
 #define verbose 1
 #define very_verbose 0
 
-#define qform_groups 10000
+//#define qform_groups 10000
+//#define qform_ops 1000
+//#define qform_reps 5
+#define qform_groups 100
 #define qform_ops 1000
-#define qform_reps 5
+#define qform_reps 10
 
 #define min_bits 16
 #define max_bits 140
 #define total_bits (max_bits+1-min_bits)
 
-int rand_seed = 0;
+#define min(a,b) (((a)<(b)) ? (a) : (b))
 
 int cprintf(const char* fmt, ...) {
   int res = 0;
@@ -61,7 +64,7 @@ void write_gnuplot_datfile_u64(const char* filename,
   for (i = 0;  i < sample_count;  i ++) {
     fprintf(f, "%"PRIu64", %.5f\n",
 	    x[i],
-	    (double)y[i] / (double)(qform_ops * qform_groups * qform_reps));
+	    (double)y[i] / (double)(qform_groups * qform_ops * qform_reps));
   }
   fclose(f);
 }
@@ -79,8 +82,10 @@ static inline void zero_qform_timings(qform_timings_t* this) {
 }
 
 void time_qform_set(qform_timings_t* timings,
-		    int nbits,
-		    qform_group_t* qform_group) {
+		    qform_group_t* qform_group,
+		    const int nbits,
+		    const uint64_t rand_seed,
+		    const char* name) {
   group_t* group = &qform_group->group;
   gmp_randstate_t rands;
   int i;
@@ -102,7 +107,7 @@ void time_qform_set(qform_timings_t* timings,
   cprintf("Running qform timings for %d bit discriminants.\n", nbits);
 
   // time compose
-  cprintf("Time for %dbit compose: ", nbits);
+  cprintf("Time for %dbit compose-%s: ", nbits, name);
   fflush(stdout);
   gmp_randseed_ui(rands, rand_seed);
   srand(rand_seed);
@@ -128,7 +133,7 @@ void time_qform_set(qform_timings_t* timings,
   cprintf("%"PRIu64" us\n", time);
 
   // time square
-  cprintf("Time for %dbit square: ", nbits);
+  cprintf("Time for %dbit square-%s: ", nbits, name);
   fflush(stdout);
   gmp_randseed_ui(rands, rand_seed);
   srand(rand_seed);
@@ -151,7 +156,7 @@ void time_qform_set(qform_timings_t* timings,
   cprintf("%"PRIu64" us\n", time);
 
   // time cube
-  cprintf("Time for %dbit cube: ", nbits);
+  cprintf("Time for %dbit cube-%s: ", nbits, name);
   fflush(stdout);
   gmp_randseed_ui(rands, rand_seed);
   srand(rand_seed);
@@ -180,65 +185,101 @@ void time_qform_set(qform_timings_t* timings,
   mpz_clear(D);
 }
 
+void output_timings(const qform_timings_t* timings, const int j,
+		    const char* compose_file,
+		    const char* square_file,
+		    const char* cube_file) {
+  int i;
+  uint64_t x[max_bits+1];
+  uint64_t y[max_bits+1];
+  for (i = min_bits; i <= j; i++) {
+    x[i] = i;
+    y[i] = timings[i].compose;
+  }
+  write_gnuplot_datfile_u64(compose_file,
+			    &x[min_bits], &y[min_bits], j - min_bits + 1);
+
+  for (i = min_bits; i <= j; i++) {
+    y[i] = timings[i].square;
+  }
+  write_gnuplot_datfile_u64(square_file,
+			    &x[min_bits], &y[min_bits], j - min_bits + 1);
+
+  for (i = min_bits; i <= j; i++) {
+    y[i] = timings[i].cube;
+  }
+  write_gnuplot_datfile_u64(cube_file,
+			    &x[min_bits], &y[min_bits], j - min_bits + 1);
+}
+
 void time_qforms(void) {
-  qform_timings_t timings[max_bits+1];
+  qform_timings_t timings_s64[max_bits+1];
+  qform_timings_t timings_s128[max_bits+1];
+  qform_timings_t timings_mpz[max_bits+1];
   s64_qform_group_t s64_qform;
   s128_qform_group_t s128_qform;
   mpz_qform_group_t mpz_qform;
-  uint64_t x[max_bits+1];
-  uint64_t y[max_bits+1];
   int i;
+  int j;
   int rep;
+  uint64_t rand_seed;
 
   s64_qform_group_init(&s64_qform);
   s128_qform_group_init(&s128_qform);
   mpz_qform_group_init(&mpz_qform);
 
+  // Prime the CPU for 3 seconds
+  printf("Priming CPU for 3 seconds.\n");
+  uint64_t start = current_nanos();
+  while (current_nanos() - start < 3000000000) {
+  }
+
   // Zero timings.
   for (i = 0;  i <= max_bits;  i ++) {
-    zero_qform_timings(&timings[i]);
-    x[i] = i;
+    zero_qform_timings(&timings_s64[i]);
+    zero_qform_timings(&timings_s128[i]);
+    zero_qform_timings(&timings_mpz[i]);
   }
 
   for (rep = 0;  rep < qform_reps;  rep ++) {
     rand_seed = current_nanos();
 
-    for (i = min_bits;
-	 i <= s64_qform.desc.discriminant_max_bits && i <= max_bits;
-	 i++) {
+    // Run set using s64 implementation.
+    j = min(s64_qform.desc.discriminant_max_bits, max_bits);
+    for (i = min_bits; i <= j; i++) {
       cprintf("Rep %d on s64_qform for %d bit discriminant.\n", rep, i);
-      time_qform_set(&timings[i], i, (qform_group_t*)&s64_qform);
+      time_qform_set(&timings_s64[i], (qform_group_t*)&s64_qform,
+		     i, rand_seed, "64");
       cprintf("\n");
     }
-    for (;
-	 i <= s128_qform.desc.discriminant_max_bits && i <= max_bits;
-	 i++) {
+
+    // Run set using s128 implementation.
+    j = min(s128_qform.desc.discriminant_max_bits, max_bits);
+    for (i = min_bits; i <= j; i++) {
       cprintf("Rep %d on s128_qform for %d bit discriminant.\n", rep, i);
-      time_qform_set(&timings[i], i, (qform_group_t*)&s128_qform);
+      time_qform_set(&timings_s128[i], (qform_group_t*)&s128_qform,
+		     i, rand_seed, "128");
       cprintf("\n");
     }
-    for (; i <= max_bits; i++) {
+
+    // Run set using MPZ implementation.
+    for (i = min_bits; i <= max_bits; i++) {
       cprintf("Rep %d on mpz_qform for %d bit discriminant.\n", rep, i);
-      time_qform_set(&timings[i], i, (qform_group_t*)&mpz_qform);
+      time_qform_set(&timings_mpz[i], (qform_group_t*)&mpz_qform,
+		     i, rand_seed, "mpz");
       cprintf("\n");
     }
   }
 
   // output data
-  for (i = min_bits;  i <= max_bits;  i ++) {
-    y[i] = timings[i].compose;
-  }
-  write_gnuplot_datfile_u64("compose.dat", &x[min_bits], &y[min_bits], total_bits);
-
-  for (i = min_bits;  i <= max_bits;  i ++) {
-    y[i] = timings[i].square;
-  }
-  write_gnuplot_datfile_u64("square.dat", &x[min_bits], &y[min_bits], total_bits);
-
-  for (i = min_bits;  i <= max_bits;  i ++) {
-    y[i] = timings[i].cube;
-  }
-  write_gnuplot_datfile_u64("cube.dat", &x[min_bits], &y[min_bits], total_bits);
+  j = min(s64_qform.desc.discriminant_max_bits, max_bits);
+  output_timings(timings_s64, j,
+		 "compose-64.dat", "square-64.dat", "cube-64.dat");
+  j = min(s128_qform.desc.discriminant_max_bits, max_bits);
+  output_timings(timings_s128, j,
+		 "compose-128.dat", "square-128.dat", "cube-128.dat");
+  output_timings(timings_mpz, max_bits,
+		 "compose-mpz.dat", "square-mpz.dat", "cube-mpz.dat");
 
   s64_qform_group_clear(&s64_qform);
   s128_qform_group_clear(&s128_qform);
