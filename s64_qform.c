@@ -105,13 +105,7 @@ static inline int64_t s64_qform_c(const s64_qform_group_t* group,
 
 void s64_qform_set_id(s64_qform_group_t* group, s64_qform_t* form) {
   form->a = 1;
-  if ((group->D & 3) == 0) {
-    // D is divisible by four
-    form->b = 0;
-  } else {
-    form->b = 1;
-  }
-  // c = (b*b-D) / (4a)
+  form->b = (group->D & 3) != 0;
   form->c = s64_qform_c(group, form->a, form->b);
 }
 

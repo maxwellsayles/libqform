@@ -214,12 +214,7 @@ static void xgcd_shortpartial_divrem_s128(s128_t* R1, s128_t* R0, int64_t* C1, i
 
 void s128_qform_set_id(s128_qform_group_t* group, s128_qform_t* form) {
   form->a = 1;
-  if ((group->D.v0 & 3) == 0) {
-    // D is divisible by four
-    form->b = 0;
-  } else {
-    form->b = 1;
-  }
+  form->b = (group->D.v0 & 3) != 0;
   s128_qform_c(group, &form->c, form->a, form->b);
 }
 

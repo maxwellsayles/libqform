@@ -60,7 +60,7 @@ int s128_qform_split_ambiguous(s128_qform_group_t* group, mpz_t d, const mpz_t N
 static inline void s128_qform_set(s128_qform_group_t* group, s128_qform_t* R, const s128_qform_t* A) {
   R->a = A->a;
   R->b = A->b;
-  set_s128_s128(&R->c, &A->c);
+  R->c = A->c;
 }
 
 static inline int s128_qform_equal(s128_qform_group_t* group, const s128_qform_t* A, const s128_qform_t* B) {
@@ -97,5 +97,5 @@ static inline int s128_qform_is_ambiguous(s128_qform_group_t* group, const s128_
   return form->a > 1 && (form->b == 0 || form->a == form->b || cmp_s64_s128(form->a, &form->c) == 0);
 }
 
-#endif // S128_QFORM__INCLUDED
+#endif  // S128_QFORM__INCLUDED
 
