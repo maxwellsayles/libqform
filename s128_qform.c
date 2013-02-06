@@ -762,11 +762,7 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
       
       // use the remainder of v1 nearest to zero (L >= 0)
       v1 %= L_64;
-      if (v1 < -(L_64>>1)) {
-	v1 += L_64;
-      } else if (v1 > (L_64>>1)) {
-	v1 -= L_64;
-      }
+      v1 += cond_negate_s64((L_64>>1)-v1, L_64);
       t2_64 = mod_s64_s128_s64(&c1, L_64);
       t1_64 = mulmod_s64(t2_64, a1, L_64);
       t1_64 = mulmod_s64(t1_64, v1, L_64);
@@ -774,9 +770,10 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
       t1_64 = mulmod_s64(t1_64, v1, L_64);
       t1_64 = mulmod_s64(t1_64, t2_64, L_64);
       // use a positive remainder
-      if (t1_64 < 0) {
-	t1_64 += L_64;
-      }
+      t1_64 += L_64 & (t1_64 >> 63);
+      //      if (t1_64 < 0) {
+      //	t1_64 += L_64;
+      //      }
       set_s128_s64(&K, t1_64);
     } else {
       // 128bit modulus (use GMP)
@@ -835,9 +832,10 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
       t1_64 = addmod_s64(t1_64, t2_64, L_64);
       t2_64 = mod_s64_s128_s64(&c1, L_64);
       t1_64 = mulmod_s64(t1_64, -t2_64, L_64);
-      if (t1_64 < 0) {
-	t1_64 += L_64;
-      }
+      t1_64 += L_64 & (t1_64 >> 63);
+      //      if (t1_64 < 0) {
+      //	t1_64 += L_64;
+      //      }
       set_s128_s64(&K, t1_64);
     } else {
       // 128bit modulus (use GMP)
