@@ -280,14 +280,14 @@ void s64_qform_reduce(s64_qform_group_t* group, s64_qform_t* form) {
       // q = b/2a = (b/a)/2
       // r = b%2a = (b%a) +- a*((b/a)%2)
       // where '/' is divide with floor.
+      // NOTE: $a$ is always positive. $b$ may be negative, however,
+      //       so $q$ and $r$ may be negative.
       divrem_s32(&q, &r, form->b, form->a);
       // Add/sub 1 to q while bringing r closer to 0.
-      int32_t qm = -(q & 1);       // qm = q & 1 ? -1 : 0;
-      int32_t rm = (r <= 0) - 1;   // rm = r <= 0 ? 0 : -1;
-      int32_t am = form->a >> 31;  // am = a < 0 ? -1 : 0;
-      int32_t m = am ^ rm;
-      r += ((form->a ^ m) - m) & qm;
-      q -= (m | 1) & qm;
+      int32_t qm = -(q & 1);            // qm = q & 1 ? -1 : 0;
+      int32_t rm = (r <= 0) - 1;        // rm = r <= 0 ? 0 : -1;
+      r += ((form->a ^ rm) - rm) & qm;  // move r towards 0
+      q -= (rm | 1) & qm;               // make q even
       q >>= 1;
       
       form->c -= ((int64_t)q * ((int64_t)form->b + (int64_t)r)) >> 1;
