@@ -16,10 +16,7 @@
 #define verbose 1
 #define very_verbose 0
 
-//#define qform_groups 10000
-//#define qform_ops 1000
-//#define qform_reps 5
-#define qform_groups 100
+#define qform_groups 10000
 #define qform_ops 1000
 #define qform_reps 10
 
