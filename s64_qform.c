@@ -21,10 +21,12 @@
 #include "libqform/dbreps/s64_pow_reps.h"
 #include "libqform/mpz_qform.h"
 
+/// Average cost to compose, square, and cube in nanoseconds a
+/// form with a 59-bit discriminant.
 const group_cost_t s64_qform_costs = {
-  1.218,
-  1.000,
-  1.720
+  313.76842,
+  282.41324,
+  547.95076
 };
 
 #define xgcd_s32(s, t, u, v) xgcd_divrem_s32(s, t, u, v)

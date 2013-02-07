@@ -21,10 +21,14 @@
 #include "libqform/dbreps/s128_pow_reps.h"
 #include "libqform/mpz_qform.h"
 
+/// Average cost to compose, square, and cube in nanoseconds
+/// a form with a 118-bit discriminant.
+// TODO: Use compose + square instead of cube, since it's faster.
 const group_cost_t s128_qform_costs = {
-  1.142,
-  1.000,
-  2.129
+  736.07672,
+  623.03309,
+  1359.10981  // This is the cost to multiply with its square.
+  //  1589.80961  // This is the cost to cube
 };
 
 // Actual GCD methods to use.

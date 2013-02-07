@@ -13,10 +13,12 @@
 #include "libqform/dbreps/mpz_pow_reps.h"
 #include "libqform/mpz_qform.h"
 
+/// Average cost to compose, square, and cube in nanoseconds
+/// a form with a 140-bit discriminant.
 const group_cost_t mpz_qform_costs = {
-  1.187,
-  1,
-  1.624
+  2476.07533,
+  2103.23054,
+  3331.83356
 };
 
 /**
