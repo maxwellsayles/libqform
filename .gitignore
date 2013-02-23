@@ -1,3 +1,6 @@
+# Ignore graph data.
+*.eps
+
 # Compiled Object files
 *.slo
 *.lo

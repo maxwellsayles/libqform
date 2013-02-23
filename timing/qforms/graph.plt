@@ -1,6 +1,7 @@
 #!/usr/bin/gnuplot -persist
 
 set terminal eps
+set key left
 
 set output 'compose-all.eps'
 set xlabel "Bits in Discriminant" 
