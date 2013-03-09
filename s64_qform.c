@@ -233,8 +233,7 @@ int s64_qform_split_ambiguous(s64_qform_group_t* group,
       m = form->b - 2*form->a;
     }
   }
-  
-  if (m < 0) m = -m;
+  m = abs_s64(m);
   d = gcd_binary_l2r_u64(m, N);
   mpz_set_s64(out_d, d);
   

@@ -348,10 +348,7 @@ int s128_qform_split_ambiguous(s128_qform_group_t* group, mpz_t out_d, const mpz
       sub_s128_s64(&m, form->b);
     }
   }
-  
-  if (is_negative_s128(&m)) {
-    neg_s128_s128(&m, &m);
-  }
+  abs_s128_s128(&m, &m);
   gcd_binary_l2r_u128((u128_t*)&d, (const u128_t*)&m, (const u128_t*)&N);
   mpz_set_s128(out_d, &d);
   
