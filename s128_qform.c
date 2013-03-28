@@ -21,14 +21,21 @@
 #include "libqform/dbreps/s128_pow_reps.h"
 #include "libqform/mpz_qform.h"
 
+// If 0, compute cube as square with compose,
+// otherwise, compute cube directly.
+#define S128_QFORM_GENUINE_CUBING 0
+
 /// Average cost to compose, square, and cube in nanoseconds
 /// a form with a 118-bit discriminant.
 // TODO: Use compose + square instead of cube, since it's faster.
 const group_cost_t s128_qform_costs = {
   736.07672,
   623.03309,
+#if (S128_QFORM_GENUINE_CUBING == 0)
   1359.10981  // This is the cost to multiply with its square.
-  //  1589.80961  // This is the cost to cube
+#else
+  1589.80961  // This is the cost to cube
+#endif
 };
 
 // Actual GCD methods to use.
@@ -707,7 +714,10 @@ void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qf
  * Arthur Schmidt.
  * www.lirmm.fr/~imbert/pdfs/cubing_amc_2010.pdf
  */
-void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qform_t* A) {
+#if (S128_QFORM_GENUINE_CUBING != 0)
+void s128_qform_cube(s128_qform_group_t* group,
+		     s128_qform_t* R,
+		     const s128_qform_t* A) {
   int64_t a1;
   int64_t b1;
   s128_t c1;
@@ -986,6 +996,19 @@ void s128_qform_cube(s128_qform_group_t* group, s128_qform_t* R, const s128_qfor
   // normalize and reduce
   s128_qform_reduce(group, R);
 }
+
+#else  // S128_QFORM_GENUINE_CUBING != 0
+
+void s128_qform_cube(s128_qform_group_t* group,
+		     s128_qform_t* R,
+		     const s128_qform_t* A) {
+  s128_qform_t tmp;
+  s128_qform_square(group, &tmp, A);
+  s128_qform_compose(group, R, &tmp, A);
+}
+
+#endif  // S128_QFORM_GENUINE_CUBING != 0
+
 
 void s128_qform_print(s128_qform_group_t* group, const s128_qform_t* form) {
   char cbuffer[41];
