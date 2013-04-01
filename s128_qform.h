@@ -74,12 +74,13 @@ static inline void s128_qform_set3(s128_qform_group_t* group, s128_qform_t* R, c
 }
 
 static inline uint32_t s128_qform_hash32(s128_qform_group_t* group, const s128_qform_t* form) {
-  // Magic number is largest 32-bit unsigned prime.
-  // It's important that we only use the a and c components, since
-  // b is redundant, but more importantly, this means that
-  // the form and its inverse hash to the same value
-  // and will get picked up by collision detection routines.
-  const uint32_t magic = 4294967291UL;
+  // Magic number is smallest prime larger than (1+sqrt(5))/2 * 2^31,
+  // which is the golden ratio.
+  // NOTE: It's important that we only use the a and c components, since
+  //       b is redundant, but more importantly, this means that
+  //       the form and its inverse hash to the same value
+  //       and will get picked up by collision detection routines.
+  const uint32_t magic = 3474701543UL;
   return (((uint32_t)form->a * magic) + (uint32_t)form->c.v0) * magic;
 }
 
