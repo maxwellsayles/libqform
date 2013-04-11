@@ -22,20 +22,20 @@
 #include "libqform/dbreps/s128_pow_reps.h"
 #include "libqform/mpz_qform.h"
 
-// If 0, compute cube as square with compose,
-// otherwise, compute cube directly.
-#define S128_QFORM_GENUINE_CUBING 0
+// 0 - NUCUBE only
+// 1 - Multiply with Square only
+// 2 - NUCUBE < 69 bits.  Multiply with Square otherwise.
+#define S128_QFORM_CUBING_STYLE 2
 
 /// Average cost to compose, square, and cube in nanoseconds
 /// a form with a 118-bit discriminant.
-// TODO: Use compose + square instead of cube, since it's faster.
 const group_cost_t s128_qform_costs = {
   736.07672,
   623.03309,
-#if (S128_QFORM_GENUINE_CUBING == 0)
+#if (S128_QFORM_CUBING_STYLE != 0)
   1359.10981  // This is the cost to multiply with its square.
 #else
-  1589.80961  // This is the cost to cube
+  1589.80961  // This is the cost to cube.
 #endif
 };
 
@@ -45,8 +45,48 @@ const group_cost_t s128_qform_costs = {
 #define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
 
 #define xgcd_s128(g, s, t, u, v) xgcd_lehmer_s128_s64l2r(g, s, t, u, v)
-#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_binary_l2r_s128(R1, R0, C1, C0, bound)
+//#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_binary_l2r_s128(R1, R0, C1, C0, bound)
+#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_lehmer_s128_s64l2r(R1, R0, C1, C0, bound)
 
+/*
+// Dynamically choose the XGCD.
+static void xgcd_s128(s128_t* g,
+		      s128_t* s, s128_t* t,
+		      const s128_t* u, const s128_t* v) {
+  int k1 = numbits_s128(s);
+  int k0 = numbits_s128(t);
+  int k = k1 > k0 ? k1 : k0;
+  if (k < 63) {
+    int64_t gg, ss, tt, uu, vv;
+    uu = get_s64_from_s128(u);
+    vv = get_s64_from_s128(v);
+    gg = xgcd_binary_l2r_s64(&ss, &tt, uu, vv);
+    set_s128_s64(g, gg);
+    set_s128_s64(s, ss);
+    set_s128_s64(t, tt);
+  } else {
+    xgcd_lehmer_s128_s64l2r(g, s, t, u, v);
+  }
+}
+
+/// Dynamically chose the XGCD.
+static void xgcd_shortpartial_s128(s128_t* R1, s128_t* R0,
+				   int64_t* C1, int64_t* C0,
+				   int64_t bound) {
+  int k1 = numbits_s128(R1);
+  int k0 = numbits_s128(R0);
+  int k = k1 > k0 ? k1 : k0;
+  if (k < 63) {
+    int64_t r1 = get_s64_from_s128(R1);
+    int64_t r0 = get_s64_from_s128(R0);
+    xgcd_partial_binary_l2r_s64(&r1, &r0, C1, C0, bound);
+    set_s128_s64(R1, r1);
+    set_s128_s64(R0, r0);
+  } else {
+    xgcd_shortpartial_lehmer_s128_s64l2r(R1, R0, C1, C0, bound);
+  }
+}
+*/
 
 #ifdef _DEBUG
 #define assert64(t, s) \
@@ -715,10 +755,10 @@ void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qf
  * Arthur Schmidt.
  * www.lirmm.fr/~imbert/pdfs/cubing_amc_2010.pdf
  */
-#if (S128_QFORM_GENUINE_CUBING != 0)
-void s128_qform_cube(s128_qform_group_t* group,
-		     s128_qform_t* R,
-		     const s128_qform_t* A) {
+#if (S128_QFORM_CUBING_STYLE != 1)
+static void s128_qform_genuine_cube(s128_qform_group_t* group,
+				    s128_qform_t* R,
+				    const s128_qform_t* A) {
   int64_t a1;
   int64_t b1;
   s128_t c1;
@@ -897,9 +937,17 @@ void s128_qform_cube(s128_qform_group_t* group,
     //  64bit C1,C2).
     set_s128_s128(&R2_128, &L);
     set_s128_s128(&R1_128, &K);
-    xgcd_shortpartial_s128(&R2_128, &R1_128, &C2, &C1, B);
-    assert64(&R1_128, "R1");
-    R1 = get_s64_from_s128(&R1_128);
+    if (s128_is_s64(&R2_128) && s128_is_s64(&R1_128)) {
+      int64_t R2 = get_s64_from_s128(&R2_128);
+      R1 = get_s64_from_s128(&R1_128);
+      xgcd_partial_s64(&R2, &R1, &C2, &C1, B);
+      set_s128_s64(&R2_128, R2);
+      set_s128_s64(&R1_128, R1);
+    } else {
+      xgcd_shortpartial_s128(&R2_128, &R1_128, &C2, &C1, B);
+      assert64(&R1_128, "R1");
+      R1 = get_s64_from_s128(&R1_128);
+    }
     
 #ifdef _DEBUG
     // verify that shortpartial gives the right answer
@@ -997,18 +1045,41 @@ void s128_qform_cube(s128_qform_group_t* group,
   // normalize and reduce
   s128_qform_reduce(group, R);
 }
+#endif
 
-#else  // S128_QFORM_GENUINE_CUBING != 0
-
-void s128_qform_cube(s128_qform_group_t* group,
-		     s128_qform_t* R,
-		     const s128_qform_t* A) {
+#if (S128_QFORM_CUBING_STYLE != 0)
+static void s128_qform_multiply_and_square(s128_qform_group_t* group,
+					   s128_qform_t* R,
+					   const s128_qform_t* A) {
   s128_qform_t tmp;
   s128_qform_square(group, &tmp, A);
   s128_qform_compose(group, R, &tmp, A);
 }
+#endif
 
-#endif  // S128_QFORM_GENUINE_CUBING != 0
+#if (S128_QFORM_CUBING_STYLE == 2)
+static void s128_qform_dynamic_cube(s128_qform_group_t* group,
+				    s128_qform_t* R,
+				    const s128_qform_t* A) {
+  int k = numbits_s128(&group->D);
+  if (k < 69) s128_qform_genuine_cube(group, R, A);
+  s128_qform_multiply_and_square(group, R, A);
+}
+#endif
+
+void s128_qform_cube(s128_qform_group_t* group,
+		     s128_qform_t* R,
+		     const s128_qform_t* A) {
+#if (S128_QFORM_CUBING_STYLE == 0)
+  s128_qform_genuine_cube(group, R, A);
+#elif (S128_QFORM_CUBING_STYLE == 1)
+  s128_qform_multiply_and_square(group, R, A);
+#elif (S128_QFORM_CUBING_STYLE == 2)
+  s128_qform_dynamic_cube(group, R, A);
+#else
+#error "Unrecognized cubing style."
+#endif
+}
 
 
 void s128_qform_print(s128_qform_group_t* group, const s128_qform_t* form) {
