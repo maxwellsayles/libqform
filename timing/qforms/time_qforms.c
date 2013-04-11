@@ -16,9 +16,15 @@
 #define verbose 1
 #define very_verbose 0
 
-#define qform_groups 10000
+#define time_s64 0
+#define time_s128 1
+#define time_mpz 0
+
+//#define qform_groups 10000
+#define qform_groups 1000
 #define qform_ops 1000
-#define qform_reps 10
+//#define qform_reps 10
+#define qform_reps 1
 
 #define min_bits 16
 #define max_bits 140
@@ -241,6 +247,7 @@ void time_qforms(void) {
   for (rep = 0;  rep < qform_reps;  rep ++) {
     rand_seed = current_nanos();
 
+#if (time_s64 == 1)
     // Run set using s64 implementation.
     j = min(s64_qform.desc.discriminant_max_bits, max_bits);
     for (i = min_bits; i <= j; i++) {
@@ -249,7 +256,9 @@ void time_qforms(void) {
 		     i, rand_seed, "64");
       cprintf("\n");
     }
+#endif
 
+#if (time_s128 == 1)
     // Run set using s128 implementation.
     j = min(s128_qform.desc.discriminant_max_bits, max_bits);
     for (i = min_bits; i <= j; i++) {
@@ -258,7 +267,9 @@ void time_qforms(void) {
 		     i, rand_seed, "128");
       cprintf("\n");
     }
+#endif
 
+#if (time_mpz == 1)
     // Run set using MPZ implementation.
     for (i = min_bits; i <= max_bits; i++) {
       cprintf("Rep %d on mpz_qform for %d bit discriminant.\n", rep, i);
@@ -266,17 +277,24 @@ void time_qforms(void) {
 		     i, rand_seed, "mpz");
       cprintf("\n");
     }
+#endif
   }
 
   // output data
+#if (time_s64 == 1)
   j = min(s64_qform.desc.discriminant_max_bits, max_bits);
   output_timings(timings_s64, j,
 		 "compose-64.dat", "square-64.dat", "cube-64.dat");
+#endif
+#if (time_s128 == 1)
   j = min(s128_qform.desc.discriminant_max_bits, max_bits);
   output_timings(timings_s128, j,
 		 "compose-128.dat", "square-128.dat", "cube-128.dat");
+#endif
+#if (time_mpz == 1)
   output_timings(timings_mpz, max_bits,
 		 "compose-mpz.dat", "square-mpz.dat", "cube-mpz.dat");
+#endif
 
   s64_qform_group_clear(&s64_qform);
   s128_qform_group_clear(&s128_qform);
