@@ -43,7 +43,7 @@ const group_cost_t s128_qform_costs = {
 #define xgcd_left_s64(s, u, v) xgcd_left_binary_l2r_s64(s, u, v)
 #define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
 
-#define xgcd_s128(g, s, t, u, v) xgcd_mpz_s128(g, s, t, u, v)
+#define xgcd_s128(g, s, t, u, v) xgcd_lehmer_s128_s64l2r(g, s, t, u, v)
 #define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_binary_l2r_s128(R1, R0, C1, C0, bound)
 
 
