@@ -9,17 +9,20 @@ set ylabel "Nanoseconds"
 set xrange [16:*]
 plot "compose-64.dat" with lines title '64-bit Multiplication', \
      "compose-128.dat" with lines title "128-bit Multiplication", \
-     "compose-mpz.dat" with lines title "GMP Multiplication"
+     "compose-mpz.dat" with lines title "GMP Multiplication", \
+     "compose-pari.dat" with lines title "PARI Multiplication"
 
 set output 'square-all.eps'
 plot "square-64.dat" with lines title '64-bit Squaring', \
      "square-128.dat" with lines title "128-bit Squaring", \
-     "square-mpz.dat" with lines title "GMP Squaring"
+     "square-mpz.dat" with lines title "GMP Squaring", \
+     "square-pari.dat" with lines title "PARI Squaring"
 
 set output 'cube-all.eps'
 plot "cube-64.dat" with lines title '64-bit Cubing', \
      "cube-128.dat" with lines title "128-bit Cubing", \
-     "cube-mpz.dat" with lines title "GMP Cubing"
+     "cube-mpz.dat" with lines title "GMP Cubing", \
+     "cube-pari.dat" with lines title "PARI Cubing"
 
 
 # Cube vs compose+square

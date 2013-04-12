@@ -23,7 +23,7 @@
 #define time_pari 1
 
 //#define qform_groups 10000
-#define qform_groups 1000
+#define qform_groups 10000
 #define qform_ops 1000
 //#define qform_reps 10
 #define qform_reps 1

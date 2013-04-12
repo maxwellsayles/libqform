@@ -1,7 +1,7 @@
 from glob import glob
 import os
 
-libs = ['rt']
+libs = ['rt', 'pari']
 
 source_files = glob('*.c')
 source_files += ['../../../libqform/libqform.a']
@@ -19,6 +19,6 @@ cpppath = ['../../..']
 Program(target='time_qforms',
         source=source_files,
         CPPPATH=cpppath,
-        CCFLAGS=["-O3", "-Wall", "-Werror", "-DNDEBUG"],
+        CCFLAGS=["-O3", "-Wall", "-DNDEBUG"],
         LIBS=libs)
 	
