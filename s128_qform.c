@@ -1063,7 +1063,7 @@ static void s128_qform_dynamic_cube(s128_qform_group_t* group,
 				    const s128_qform_t* A) {
   int k = numbits_s128(&group->D);
   if (k < 69) s128_qform_genuine_cube(group, R, A);
-  s128_qform_multiply_and_square(group, R, A);
+  else s128_qform_multiply_and_square(group, R, A);
 }
 #endif
 
