@@ -59,6 +59,7 @@ eval {
     combine "64";
     combine "128";
     combine "mpz";
+    combine "pari";
 };
 if ($@) {
     print STDERR "$@\n";

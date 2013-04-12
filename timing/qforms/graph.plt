@@ -42,3 +42,9 @@ set xrange [119:*]
 plot "compose_square-mpz.dat" with lines title 'GMP Multiply w/ Square', \
      "cube-mpz.dat" with lines title 'GMP Cubing'
 set xrange [*:*]
+
+set output 'cube-vs-pari.eps'
+set xrange [119:*]
+plot "compose_square-pari.dat" with lines title 'PARI Multiply w/ Square', \
+     "cube-pari.dat" with lines title 'PARI Cubing'
+set xrange [*:*]
