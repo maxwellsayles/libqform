@@ -905,11 +905,12 @@ static void s128_qform_genuine_cube(s128_qform_group_t* group,
     mul_s128_s128_s64(&c1, &c1, S);
   }
   
-  // Compute NUCOMP termination bound
+  // Compute NUCOMP termination bound,
+  // sqrt(a1)*root(4, group->D/4)
+  // This is roughly (a1*group->S/2) shifted right by half the number
+  // of bits.
   mul_s128_s64_s64(&temp, group->S, a1);
-  shr_s128_int(&temp, ((msb_s128(&temp)+1)>>1)+1); // approximate sqrt
-  //shr_s128(&temp);
-  //sqrt_u128_u128((u128_t*)&temp, (u128_t*)&temp);
+  shr_s128_int(&temp, (msb_s128(&temp) + 1) >> 1); // approximate sqrt
   assert64(&temp, "B");
   B = get_s64_from_s128(&temp);
   B |= !B;
