@@ -24,7 +24,7 @@
 #define qform_groups 1000
 #define qform_ops 1000
 //#define qform_reps 10
-#define qform_reps 1
+#define qform_reps 10
 
 #define min_bits 16
 #define max_bits 140
