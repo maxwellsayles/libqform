@@ -37,11 +37,11 @@ sub combine {
     my $composeLine = <COMPOSE>;
     my $squareLine = <SQUARE>;
     while ($composeLine && $squareLine) {
-	last if $composeLine !~ m/(\d+),? (\d+)/;
+	last if $composeLine !~ m/(\d+),? (\d+\.\d+)/;
 	my $nbits = $1;
 	my $composeTime = $2;
 
-	last if $squareLine !~ m/\d+,? (\d+)/;
+	last if $squareLine !~ m/\d+,? (\d+\.\d+)/;
 	my $squareTime = $1;
 
 	my $sum = $composeTime + $squareTime;
