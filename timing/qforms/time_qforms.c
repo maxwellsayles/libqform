@@ -1,3 +1,4 @@
+#include <pari/pari.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -17,14 +18,15 @@
 #define very_verbose 0
 
 #define time_s64 0
-#define time_s128 1
+#define time_s128 0
 #define time_mpz 0
+#define time_pari 1
 
 //#define qform_groups 10000
 #define qform_groups 1000
 #define qform_ops 1000
 //#define qform_reps 10
-#define qform_reps 10
+#define qform_reps 1
 
 #define min_bits 16
 #define max_bits 140
@@ -41,6 +43,15 @@ int cprintf(const char* fmt, ...) {
     va_end(args);
   }
   return res;
+}
+
+/// Convert the mpz_t to a string and then to a GEN.
+/// This is inefficient, but works, and isn't timed anyways.
+GEN to_gen(mpz_t x) {
+  char c[1024];
+  mpz_get_str(c, 10, x);
+  GEN y = strtoi(c);
+  return y;
 }
 
 // gives the time from system on in nanoseconds
@@ -188,6 +199,132 @@ void time_qform_set(qform_timings_t* timings,
   mpz_clear(D);
 }
 
+void time_pari_set(qform_timings_t* timings,
+		   const int nbits,
+		   const uint64_t rand_seed,
+		   const char* name) {
+  gmp_randstate_t rands;
+  int i;
+  int j;
+  mpz_t D;
+  uint64_t time;
+  uint64_t start;
+  GEN A;
+  GEN B;
+  GEN C;
+
+  mpz_qform_group_t qform_group;
+  mpz_qform_t P;
+
+  mpz_qform_group_init(&qform_group);
+  mpz_qform_init(&qform_group, &P);
+
+  gmp_randinit_default(rands);
+  mpz_init(D);
+
+  cprintf("Running qform timings for %d bit discriminants.\n", nbits);
+
+  // time compose
+  cprintf("Time for %dbit compose-%s: ", nbits, name);
+  fflush(stdout);
+  gmp_randseed_ui(rands, rand_seed);
+  srand(rand_seed);
+  time = 0;
+  for (i = 0;  i < qform_groups;  i ++) {
+    if (very_verbose) cprintf("%dbit compose i=%d\n", nbits, i);
+
+    // Generate random semiprime discriminant and primeform.
+    mpz_random_semiprime_discriminant(D, rands, nbits);
+    mpz_qform_group_set_discriminant(&qform_group, D);
+    qform_random_primeform(&qform_group.desc, &P);
+
+    // Create Pari objects.
+    pari_sp ltop = avma;
+    GEN a = to_gen(P.a);
+    GEN b = to_gen(P.b);
+    GEN c = to_gen(P.c);
+    A = qfi(a, b, c);
+    B = qfi(a, b, c);
+
+    start = current_nanos();
+    for (j = 0;  j < qform_ops;  j ++) {
+      C = gmul(B, A);
+      A = B;
+      B = C;
+    }
+    time += current_nanos() - start;
+    avma = ltop;  // Clean up Pari's stack.
+  }
+  timings->compose += time;
+  cprintf("%"PRIu64" us\n", time);
+
+  // time square
+  cprintf("Time for %dbit square-%s: ", nbits, name);
+  fflush(stdout);
+  gmp_randseed_ui(rands, rand_seed);
+  srand(rand_seed);
+  time = 0;
+  for (i = 0;  i < qform_groups;  i ++) {
+    if (very_verbose) cprintf("%dbit square i=%d\n", nbits, i);
+
+    // Generate random semiprime discriminant and primeform.
+    mpz_random_semiprime_discriminant(D, rands, nbits);
+    mpz_qform_group_set_discriminant(&qform_group, D);
+    qform_random_primeform(&qform_group.desc, &P);
+
+    // Create Pari objects.
+    pari_sp ltop = avma;
+    GEN a = to_gen(P.a);
+    GEN b = to_gen(P.b);
+    GEN c = to_gen(P.c);
+    A = qfi(a, b, c);
+    
+    start = current_nanos();
+    for (j = 0;  j < qform_ops;  j ++) {
+      A = gsqr(A);
+    }
+    time += current_nanos() - start;
+    avma = ltop;
+  }
+  timings->square += time;
+  cprintf("%"PRIu64" us\n", time);
+
+  // time cube
+  cprintf("Time for %dbit cube-%s: ", nbits, name);
+  fflush(stdout);
+  gmp_randseed_ui(rands, rand_seed);
+  srand(rand_seed);
+  time = 0;
+  for (i = 0;  i < qform_groups;  i ++) {
+    if (very_verbose) cprintf("%dbits cube i=%d\n", nbits, i);
+
+    // Generate random semiprime discriminant and primeform.
+    mpz_random_semiprime_discriminant(D, rands, nbits);
+    mpz_qform_group_set_discriminant(&qform_group, D);
+    qform_random_primeform(&qform_group.desc, &P);
+
+    // Create Pari objects.
+    pari_sp ltop = avma;
+    GEN a = to_gen(P.a);
+    GEN b = to_gen(P.b);
+    GEN c = to_gen(P.c);
+    A = qfi(a, b, c);
+
+    start = current_nanos();
+    for (j = 0;  j < qform_ops;  j ++) {
+      A = gpowgs(A, 3);
+    }
+    time += current_nanos() - start;
+    avma = ltop;
+  }
+  timings->cube += time;
+  cprintf("%"PRIu64" us\n", time);
+
+  mpz_qform_clear(&qform_group, &P);
+  mpz_qform_group_clear(&qform_group);
+  mpz_clear(D);
+}
+
 void output_timings(const qform_timings_t* timings, const int j,
 		    const char* compose_file,
 		    const char* square_file,
@@ -219,6 +356,7 @@ void time_qforms(void) {
   qform_timings_t timings_s64[max_bits+1];
   qform_timings_t timings_s128[max_bits+1];
   qform_timings_t timings_mpz[max_bits+1];
+  qform_timings_t timings_pari[max_bits+1];
   s64_qform_group_t s64_qform;
   s128_qform_group_t s128_qform;
   mpz_qform_group_t mpz_qform;
@@ -242,6 +380,7 @@ void time_qforms(void) {
     zero_qform_timings(&timings_s64[i]);
     zero_qform_timings(&timings_s128[i]);
     zero_qform_timings(&timings_mpz[i]);
+    zero_qform_timings(&timings_pari[i]);
   }
 
   for (rep = 0;  rep < qform_reps;  rep ++) {
@@ -278,6 +417,15 @@ void time_qforms(void) {
       cprintf("\n");
     }
 #endif
+
+#if (time_pari == 1)
+    // Run set using Pari implementation.
+    for (i = min_bits; i <= max_bits; i++) {
+      cprintf("Rep %d on Pari for %d bit discriminant.\n", rep, i);
+      time_pari_set(&timings_pari[i], i, rand_seed, "pari");
+      cprintf("\n");
+    }
+#endif
   }
 
   // output data
@@ -295,14 +443,21 @@ void time_qforms(void) {
   output_timings(timings_mpz, max_bits,
 		 "compose-mpz.dat", "square-mpz.dat", "cube-mpz.dat");
 #endif
+#if (time_pari == 1)
+  output_timings(timings_pari, max_bits,
+		 "compose-pari.dat", "square-pari.dat", "cube-pari.dat");
+#endif
 
   s64_qform_group_clear(&s64_qform);
   s128_qform_group_clear(&s128_qform);
   mpz_qform_group_clear(&mpz_qform);
-
 }
 
 int main(int argc, char** argv) {
+#if (time_pari == 1)
+  pari_init(1<<29, 1<<20);
+#endif
+
   time_qforms();
   return 0;
 }
