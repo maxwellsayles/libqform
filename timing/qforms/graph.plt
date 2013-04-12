@@ -6,6 +6,7 @@ set key left
 set output 'compose-all.eps'
 set xlabel "Bits in Discriminant" 
 set ylabel "Nanoseconds"
+set xrange [16:*]
 plot "compose-64.dat" with lines title '64-bit Multiplication', \
      "compose-128.dat" with lines title "128-bit Multiplication", \
      "compose-mpz.dat" with lines title "GMP Multiplication"
@@ -23,11 +24,12 @@ plot "cube-64.dat" with lines title '64-bit Cubing', \
 
 # Cube vs compose+square
 set output 'cube-vs-64.eps'
+set xrange [16:59]
 plot "compose_square-64.dat" with lines title '64-bit Multiply w/ Square', \
      "cube-64.dat" with lines title '64-bit Cubing'
 
 set output 'cube-vs-128.eps'
-set xrange [59:*]
+set xrange [59:118]
 plot "compose_square-128.dat" with lines title '128-bit Multiply w/ Square', \
      "cube-128.dat" with lines title '128-bit Cubing'
 set xrange [*:*]
