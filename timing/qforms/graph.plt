@@ -10,18 +10,21 @@ set xrange [16:*]
 plot "compose-64.dat" with lines title '64-bit Multiplication', \
      "compose-128.dat" with lines title "128-bit Multiplication", \
      "compose-mpz.dat" with lines title "GMP Multiplication", \
+     "compose-mpir.dat" with lines title "MPIR Multiplication", \
      "compose-pari.dat" with lines title "PARI Multiplication"
 
 set output 'square-all.eps'
 plot "square-64.dat" with lines title '64-bit Squaring', \
      "square-128.dat" with lines title "128-bit Squaring", \
      "square-mpz.dat" with lines title "GMP Squaring", \
+     "square-mpir.dat" with lines title "MPIR Squaring", \
      "square-pari.dat" with lines title "PARI Squaring"
 
 set output 'cube-all.eps'
 plot "cube-64.dat" with lines title '64-bit Cubing', \
      "cube-128.dat" with lines title "128-bit Cubing", \
      "cube-mpz.dat" with lines title "GMP Cubing", \
+     "cube-mpir.dat" with lines title "MPIR Cubing", \
      "cube-pari.dat" with lines title "PARI Cubing"
 
 
@@ -41,6 +44,12 @@ set output 'cube-vs-mpz.eps'
 set xrange [119:*]
 plot "compose_square-mpz.dat" with lines title 'GMP Multiply w/ Square', \
      "cube-mpz.dat" with lines title 'GMP Cubing'
+set xrange [*:*]
+
+set output 'cube-vs-mpir.eps'
+set xrange [119:*]
+plot "compose_square-mpir.dat" with lines title 'MPIR Multiply w/ Square', \
+     "cube-mpir.dat" with lines title 'MPIR Cubing'
 set xrange [*:*]
 
 set output 'cube-vs-pari.eps'
