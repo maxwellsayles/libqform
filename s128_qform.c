@@ -24,8 +24,8 @@
 
 // 0 - NUCUBE only
 // 1 - Multiply with Square only
-// 2 - NUCUBE < 69 bits.  Multiply with Square otherwise.
-#define S128_QFORM_CUBING_STYLE 2
+// 2 - NUCUBE <= 69 bits.  Multiply with Square otherwise.
+#define S128_QFORM_CUBING_STYLE 0
 
 /// Average cost to compose, square, and cube in nanoseconds
 /// a form with a 118-bit discriminant.
@@ -44,9 +44,23 @@ const group_cost_t s128_qform_costs = {
 #define xgcd_left_s64(s, u, v) xgcd_left_binary_l2r_s64(s, u, v)
 #define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
 
-#define xgcd_s128(g, s, t, u, v) xgcd_lehmer_s128_s64l2r(g, s, t, u, v)
+typedef
+void xgcd_s128_f(s128_t* d,
+		 s128_t* s, s128_t* t,
+		 const s128_t* a, const s128_t* b);
+
+typedef
+void xgcd_shortpartial_s128_f(s128_t* R1, s128_t* R0,
+			      int64_t* C1, int64_t* C0,
+			      const int64_t bound);
+
+static xgcd_s128_f* xgcd_s128;
+static xgcd_shortpartial_s128_f* xgcd_shortpartial_s128;
+
+//#define xgcd_s128(g, s, t, u, v) xgcd_lehmer_s128_s64l2r(g, s, t, u, v)
+//#define xgcd_s128(g, s, t, u, v) xgcd_binary_l2r_s128(g, s, t, u, v)
 //#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_binary_l2r_s128(R1, R0, C1, C0, bound)
-#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_lehmer_s128_s64l2r(R1, R0, C1, C0, bound)
+//#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_lehmer_s128_s64l2r(R1, R0, C1, C0, bound)
 
 /*
 // Dynamically choose the XGCD.
@@ -452,7 +466,8 @@ void s128_qform_group_clear(s128_qform_group_t* group) {
  * Saves the discriminant and computes the fourth root.
  * Assumes that D is negative.
  */
-void s128_qform_group_set_discriminant(s128_qform_group_t* group, const mpz_t D) {
+void s128_qform_group_set_discriminant(s128_qform_group_t* group,
+				       const mpz_t D) {
   s128_t root;
   mpz_get_s128(&group->D, D);
   // compute roots
@@ -461,6 +476,18 @@ void s128_qform_group_set_discriminant(s128_qform_group_t* group, const mpz_t D)
   group->S = get_u64_from_u128((u128_t*)&root);
   sqrt_s128_s128(&root, &root);
   group->L = get_u64_from_u128((u128_t*)&root);
+
+  // Setup 128-bit XGCD based on size of discriminant.
+  // 96-bits is the changing point.  This came from timing both
+  // XGCD methods in the context of ideal arithmetic.
+  long n = mpz_sizeinbase(D, 2);
+  if (n < 96) {
+    xgcd_s128 = &xgcd_binary_l2r_s128;
+    xgcd_shortpartial_s128 = &xgcd_shortpartial_binary_l2r_s128;
+  } else {
+    xgcd_s128 = &xgcd_lehmer_s128_s64l2r;
+    xgcd_shortpartial_s128 = &xgcd_shortpartial_lehmer_s128_s64l2r;
+  }
 }
 
 /**
@@ -1063,7 +1090,7 @@ static void s128_qform_dynamic_cube(s128_qform_group_t* group,
 				    s128_qform_t* R,
 				    const s128_qform_t* A) {
   int k = numbits_s128(&group->D);
-  if (k < 69) s128_qform_genuine_cube(group, R, A);
+  if (k <= 69) s128_qform_genuine_cube(group, R, A);
   else s128_qform_multiply_and_square(group, R, A);
 }
 #endif
