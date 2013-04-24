@@ -22,10 +22,8 @@
 #define time_mpz 0
 #define time_pari 1
 
-//#define qform_groups 10000
-#define qform_groups 10000
+#define qform_groups 1000
 #define qform_ops 1000
-//#define qform_reps 10
 #define qform_reps 1
 
 #define min_bits 16
@@ -58,7 +56,7 @@ GEN to_gen(mpz_t x) {
 static inline uint64_t current_nanos(void) {
 #ifdef __linux__
   struct timespec res;
-  clock_gettime(CLOCK_MONOTONIC, &res);
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &res);
   return (res.tv_sec * 1000000000ULL) + res.tv_nsec;
 #else
   struct timeval tv;
@@ -384,7 +382,7 @@ void time_qforms(void) {
   }
 
   for (rep = 0;  rep < qform_reps;  rep ++) {
-    rand_seed = current_nanos();
+    rand_seed = rep;
 
 #if (time_s64 == 1)
     // Run set using s64 implementation.
