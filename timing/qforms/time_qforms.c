@@ -45,11 +45,39 @@ int cprintf(const char* fmt, ...) {
 
 /// Convert the mpz_t to a string and then to a GEN.
 /// This is inefficient, but works, and isn't timed anyways.
+#if GMP_LIMB_BITS != 64
+#error Only support for 64-bit platforms.
+#endif
 GEN to_gen(mpz_t x) {
-  char c[1024];
-  mpz_get_str(c, 10, x);
-  GEN y = strtoi(c);
-  return y;
+  if (x->_mp_size < 0) {
+    printf("Does not support negative integers.\n");
+    exit(-1);
+  } else if (x->_mp_size == 0) {
+    return stoi(0);
+  } else if (x->_mp_size == 1) {
+    return stoi(x->_mp_d[0]);
+  } else if (x->_mp_size == 2) {
+    return mkintn(4,
+		  (uint64_t)(x->_mp_d[1] >> 32) & 0xFFFFFFFF,
+		  (uint64_t)x->_mp_d[1] & 0xFFFFFFFF,
+		  (uint64_t)(x->_mp_d[0] >> 32) & 0xFFFFFFFF,
+		  (uint64_t)x->_mp_d[0] & 0xFFFFFFFF);
+  } else if (x->_mp_size == 3) {
+    return mkintn(6,
+		  (uint64_t)(x->_mp_d[2] >> 32) & 0xFFFFFFFF,
+		  (uint64_t)x->_mp_d[2] & 0xFFFFFFFF,
+		  (uint64_t)(x->_mp_d[1] >> 32) & 0xFFFFFFFF,
+		  (uint64_t)x->_mp_d[1] & 0xFFFFFFFF,
+		  (uint64_t)(x->_mp_d[0] >> 32) & 0xFFFFFFFF,
+		  (uint64_t)x->_mp_d[0] & 0xFFFFFFFF);
+  } else {
+    printf("Unsupported integer size.\n");
+    exit(-1);
+  }
+  //  char c[1024];
+  //  mpz_get_str(c, 10, x);
+  //  GEN y = strtoi(c);
+  //  return y;
 }
 
 // gives the time from system on in nanoseconds
