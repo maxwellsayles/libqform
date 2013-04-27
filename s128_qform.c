@@ -25,7 +25,7 @@
 // 0 - NUCUBE only
 // 1 - Multiply with Square only
 // 2 - NUCUBE <= 69 bits.  Multiply with Square otherwise.
-#define S128_QFORM_CUBING_STYLE 0
+#define S128_QFORM_CUBING_STYLE 2
 
 /// Average cost to compose, square, and cube in nanoseconds
 /// a form with a 118-bit discriminant.
