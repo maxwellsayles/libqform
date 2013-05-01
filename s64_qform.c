@@ -458,14 +458,11 @@ void s64_qform_square(s64_qform_group_t* group, s64_qform_t* C, const s64_qform_
  */
 void s64_qform_cube(s64_qform_group_t* group,
 		    s64_qform_t* R, const s64_qform_t* A) {
-  int32_t a1;
-  int32_t b1;
-  int64_t c1;
-  int32_t SP;
+  int32_t S;
   int32_t v1;
   int32_t N;
   int32_t T;
-  int32_t S, u2, v2;
+  int32_t u2, v2;
   int32_t R1, C1, C2;
   int32_t M1, M2;
   int32_t L_32;
@@ -492,13 +489,13 @@ void s64_qform_cube(s64_qform_group_t* group,
     return;
   }
   
-  a1 = A->a;
-  b1 = A->b;
-  c1 = A->c;
+  const int32_t a1 = A->a;
+  const int32_t b1 = A->b;
+  const int64_t c1 = A->c;
   
-  // solve SP = v1 b + u1 a (only need v1)
-  SP = xgcd_left_s32(&v1, b1, a1);
-  if (SP == 1) {
+  // solve S = v1 b + u1 a (only need v1)
+  S = xgcd_left_s32(&v1, b1, a1);
+  if (S == 1) {
     // N = a
     N = a1;
     // L = a^2
@@ -526,11 +523,11 @@ void s64_qform_cube(s64_qform_group_t* group,
       K += L & (K >> 63);  // if (K < 0) K += L;
     }
   } else {
-    // S = u2 (a SP) + v2 (b^2 - ac)
-    temp = (int64_t)SP * (int64_t)a1;
+    // S = u2 (a*S) + v2 (b^2 - ac)
+    temp = (int64_t)S * (int64_t)a1;
     temp2 = (int64_t)b1 * (int64_t)b1 - (int64_t)a1 * c1;
     if (s64_is_s32(temp) && s64_is_s32(temp2)) {
-      // (a*SP) and (b^2-ac) fit into 32bit each
+      // (a*S) and (b^2-ac) fit into 32bit each
       S = xgcd_s32(&u2, &v2, temp, temp2);
       u2_64 = u2;
     } else {
@@ -563,8 +560,6 @@ void s64_qform_cube(s64_qform_group_t* group,
       K = mulmod_s64(K, -c1, L);
       K += L & (K >> 63);  // if (K < 0) K += L;
     }
-    // C = Sc
-    c1 *= S;
   }
   
   // Compute NUCOMP termination bound
@@ -582,7 +577,7 @@ void s64_qform_cube(s64_qform_group_t* group,
     // C.b = b + 2 T
     R->b = b1 + (T << 1);
     // C.c = (S c + K (T + b)) / L
-    R->c = (K * (T+b1) + c1) / L;
+    R->c = (K * (T+b1) + S*c1) / L;
   } else {
     // use NUCOMP formulas
     // Execute partial reduction    
@@ -596,7 +591,7 @@ void s64_qform_cube(s64_qform_group_t* group,
     // T = N K (mod L)
     T_64 = mulmod_s64(K, N, L);
     T_64 += L & (T_64 >> 63);  // if (T_64 < 0) T_64 += L;
-    
+
     // M1 = (N R1 + T C1) / L
     if (s64_is_s32(T_64)) {
       M1 = muladdmul_s64_4s32(N, R1, T_64, C1) / L;
@@ -605,7 +600,7 @@ void s64_qform_cube(s64_qform_group_t* group,
     }
     
     // M2 = (R1(b + T) - c S C1) / L
-    M2 = muladdmuldiv_s64(T_64+b1, R1, -c1, C1, L);
+    M2 = muladdmuldiv_s64(T_64+b1, R1, -S*c1, C1, L);
     
     // C.a = (-1)^(i-1) (R1 M1 - C1 M2)
     R->a = R1*M1 - C1*M2;
