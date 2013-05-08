@@ -11,6 +11,7 @@
 #include <time.h>
 
 #include "liboptarith/gcd_binary_l2r.h"
+#include "liboptarith/gcd_brent.h"
 #include "liboptarith/gcd_lehmer.h"
 #include "liboptarith/gcd_mpz128.h"
 #include "liboptarith/math64.h"
@@ -42,7 +43,7 @@ const group_cost_t s128_qform_costs = {
 // Actual GCD methods to use.
 #define xgcd_s64(s, t, u, v) xgcd_binary_l2r_s64(s, t, u, v)
 #define xgcd_left_s64(s, u, v) xgcd_left_binary_l2r_s64(s, u, v)
-#define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
+#define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_brent_s64(R1, R0, C1, C0, bound)
 
 typedef
 void xgcd_s128_f(s128_t* d,
@@ -59,7 +60,7 @@ static xgcd_shortpartial_s128_f* xgcd_shortpartial_s128;
 
 //#define xgcd_s128(g, s, t, u, v) xgcd_lehmer_s128_s64l2r(g, s, t, u, v)
 //#define xgcd_s128(g, s, t, u, v) xgcd_binary_l2r_s128(g, s, t, u, v)
-//#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_binary_l2r_s128(R1, R0, C1, C0, bound)
+//#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_brent_s128(R1, R0, C1, C0, bound)
 //#define xgcd_shortpartial_s128(R1, R0, C1, C0, bound) xgcd_shortpartial_lehmer_s128_s64l2r(R1, R0, C1, C0, bound)
 
 /*
@@ -93,7 +94,7 @@ static void xgcd_shortpartial_s128(s128_t* R1, s128_t* R0,
   if (k < 63) {
     int64_t r1 = get_s64_from_s128(R1);
     int64_t r0 = get_s64_from_s128(R0);
-    xgcd_partial_binary_l2r_s64(&r1, &r0, C1, C0, bound);
+    xgcd_partial_brent_s64(&r1, &r0, C1, C0, bound);
     set_s128_s64(R1, r1);
     set_s128_s64(R0, r0);
   } else {
@@ -483,7 +484,7 @@ void s128_qform_group_set_discriminant(s128_qform_group_t* group,
   long n = mpz_sizeinbase(D, 2);
   if (n < 96) {
     xgcd_s128 = &xgcd_binary_l2r_s128;
-    xgcd_shortpartial_s128 = &xgcd_shortpartial_binary_l2r_s128;
+    xgcd_shortpartial_s128 = &xgcd_shortpartial_brent_s128;
   } else {
     xgcd_s128 = &xgcd_lehmer_s128_s64l2r;
     xgcd_shortpartial_s128 = &xgcd_shortpartial_lehmer_s128_s64l2r;

@@ -13,6 +13,7 @@
 #include <time.h>
 
 #include "liboptarith/gcd_binary_l2r.h"
+#include "liboptarith/gcd_brent.h"
 #include "liboptarith/math32.h"
 #include "liboptarith/math64.h"
 #include "liboptarith/math_mpz.h"
@@ -35,7 +36,7 @@ const group_cost_t s64_qform_costs = {
 
 #define xgcd_s64(s, t, u, v) xgcd_binary_l2r_s64(s, t, u, v)
 #define xgcd_left_s64(s, u, v) xgcd_left_binary_l2r_s64(s, u, v)
-#define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_binary_l2r_s64(R1, R0, C1, C0, bound)
+#define xgcd_partial_s64(R1, R0, C1, C0, bound) xgcd_partial_brent_s64(R1, R0, C1, C0, bound)
 
 /**
  * initialize the group
