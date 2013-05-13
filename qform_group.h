@@ -49,6 +49,7 @@ void qform_random_primeform(qform_group_t* group, qform_t* form);
 /**
  * Compute the next prime form and return the index of the prime.
  * The return value is guaranteed to be greater than 'prime_index'.
+ * Returns -1 on failure.
  */
 int qform_next_primeform(qform_group_t* group,
                          qform_t* form,
