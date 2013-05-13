@@ -28,6 +28,15 @@
 // 2 - NUCUBE <= 69 bits.  Multiply with Square otherwise.
 #define S128_QFORM_CUBING_STYLE 2
 
+// The number of bits for which Brent's XGCD partial is faster.
+#define  XGCD_CROSSOVER 96
+#define PXGCD_CROSSOVER 88
+
+// The number of bits in the discriminant for the cubing cross over.
+// <= CUBING_CROSSOVER uses genuine cubing.
+// > CUBING_CROSSOVER uses multiplication with squaring.
+#define CUBING_CROSSOVER 69
+
 /// Average cost to compose, square, and cube in nanoseconds
 /// a form with a 118-bit discriminant.
 const group_cost_t s128_qform_costs = {
@@ -482,12 +491,15 @@ void s128_qform_group_set_discriminant(s128_qform_group_t* group,
   // 96-bits is the changing point.  This came from timing both
   // XGCD methods in the context of ideal arithmetic.
   long n = mpz_sizeinbase(D, 2);
-  if (n < 96) {
+  if (n <= XGCD_CROSSOVER) {
     xgcd_s128 = &xgcd_binary_l2r_s128;
-    xgcd_shortpartial_s128 = &xgcd_shortpartial_brent_s128;
   } else {
     xgcd_s128 = &xgcd_lehmer_s128_s64l2r;
-    xgcd_shortpartial_s128 = &xgcd_shortpartial_lehmer_s128_s64l2r;
+  }
+  if (n <= PXGCD_CROSSOVER) {
+    xgcd_shortpartial_s128 = &xgcd_shortpartial_brent_s128;
+  } else {
+    xgcd_shortpartial_s128 = &xgcd_shortpartial_lehmer_s128_brent64;
   }
 }
 
@@ -1091,7 +1103,7 @@ static void s128_qform_dynamic_cube(s128_qform_group_t* group,
 				    s128_qform_t* R,
 				    const s128_qform_t* A) {
   int k = numbits_s128(&group->D);
-  if (k <= 69) s128_qform_genuine_cube(group, R, A);
+  if (k <= CUBING_CROSSOVER) s128_qform_genuine_cube(group, R, A);
   else s128_qform_multiply_and_square(group, R, A);
 }
 #endif
