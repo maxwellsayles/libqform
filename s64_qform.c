@@ -233,10 +233,11 @@ int s64_qform_split_ambiguous(s64_qform_group_t* group,
   }
   m = abs_s64(m);
   d = gcd_binary_l2r_u64(m, N);
-  mpz_set_s64(out_d, d);
-  
-  // return true if this is a non-trivial root
-  return (d > 1 && d < N);
+  if (d > 1 && d < N) {
+    mpz_set_s64(out_d, d);
+    return 1;
+  }
+  return 0;
 }
 
 /**

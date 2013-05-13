@@ -422,10 +422,11 @@ int s128_qform_split_ambiguous(s128_qform_group_t* group, mpz_t out_d, const mpz
   }
   abs_s128_s128(&m, &m);
   gcd_binary_l2r_u128((u128_t*)&d, (const u128_t*)&m, (const u128_t*)&N);
-  mpz_set_s128(out_d, &d);
-  
-  // return true if this is a non-trivial root
-  return (cmp_s128_s64(&d, 1) > 0 && cmp_s128_s128(&d, &N) < 0);
+  if (cmp_s128_s64(&d, 1) > 0 && cmp_s128_s128(&d, &N) < 0) {
+    mpz_set_s128(out_d, &d);
+    return 1;
+  }
+  return 0;
 }
 
 /**
