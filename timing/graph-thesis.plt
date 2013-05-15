@@ -58,21 +58,3 @@ plot "compose_square-pari.dat" with lines title 'PARI Multiply w/ Square', \
      "cube-pari.dat" with lines title 'PARI Cubing'
 set xrange [*:*]
 
-
-###########
-# DEFENCE #
-###########
-set xrange [16:59]
-set output 'compose-sqrtopt-64.eps'
-plot 'compose-64.dat' with lines title 'Multiply (Approx Sqrt)', \
-     'compose-sqrt-64.dat' with lines title 'Multiply (Full Sqrt)'
-set output 'cube-sqrtopt-64.eps'
-plot 'cube-64.dat' with lines title 'Cube (Approx Sqrt)', \
-     'cube-sqrt-64.dat' with lines title 'Cube (Full Sqrt)'
-
-set output 'compose-sqrtopt-128.eps'
-plot 'compose-128.dat' with lines title 'Multiply (Approx Sqrt)', \
-     'compose-sqrt-128.dat' with lines title 'Multiply (Full Sqrt)'
-set output 'cube-sqrtopt-128.eps'
-plot 'cube-128.dat' with lines title 'Cube (Approx Sqrt)', \
-     'cube-sqrt-128.dat' with lines title 'Cube (Full Sqrt)'
