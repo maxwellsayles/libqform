@@ -16,7 +16,6 @@ StaticLibrary(target='qform',
               CCFLAGS=ccflags)
 
 SConscript('tests/SConstruct')
-SConscript('timing/cubing/SConstruct')
-SConscript('timing/qforms/SConstruct')
+SConscript('timing/SConscript')
 
 
