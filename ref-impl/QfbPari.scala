@@ -36,6 +36,7 @@ def xgcd(a: BigInt, b: BigInt): (BigInt, BigInt, BigInt) = {
   val u1p = if (a < 0) -u1 else u1
   val u2p = if (b < 0) -u2 else u2
   assert(u1p * a + u2p * b == u3)
+  assert(u3 > 0)
   (u1p, u2p, u3)
 }
 
@@ -83,8 +84,8 @@ def pxgcd(a: BigInt, b: BigInt, bound: BigInt):
        (BigInt, BigInt, BigInt, BigInt, Int) = {
     if (r1 < 0) f(-r1, -s1, r0, s0, c1, c0, z)
     else if (r0 < 0) f(r1, s1, -r0, -s0, c1, c0, z)
-    else if (r1.abs < r0.abs) f(r0, s0, r1, s1, c0, c1, z + 1)	 
-    else if (r0 == 0 || r0.abs <= bound) {
+    else if (r1 < r0) f(r0, s0, r1, s1, c0, c1, z + 1)
+    else if (r0 == 0 || r0 <= bound) {
       (s1 * r1, s0 * r0, c1, c0, z)
     } else {
       val k = numBits(r1) - numBits(r0)
@@ -99,6 +100,8 @@ def pxgcd(a: BigInt, b: BigInt, bound: BigInt):
 def nucomp(form1: Qfb, form2: Qfb): Qfb = {
   var Qfb(a1, b1, c1) = form1
   var Qfb(a2, b2, c2) = form2
+  assert(a1 > 0)
+  assert(a2 > 0)
   var delta: BigInt = b1 * b1 - 4 * a1 * c1
   var delta4: BigInt = Math.pow(delta.doubleValue.abs, 1.0/4.0).toInt
   if (a1.abs < a2.abs) {
@@ -114,7 +117,7 @@ def nucomp(form1: Qfb, form2: Qfb): Qfb = {
   }
 
   var s = (b1 + b2) / 2
-  var n = b2 - s
+  val n = b2 - s
   var (u, v, d) = xgcd(a2, a1)
   var a: BigInt = 0
   var b: BigInt = 0
@@ -125,21 +128,21 @@ def nucomp(form1: Qfb, form2: Qfb): Qfb = {
   var b3: BigInt = 0
   var c3: BigInt = 0
   var g: BigInt = 0
-  if (d.abs == 1) {
+  if (d == 1) {
     a = -u * n
     d1 = d
   } else {
-    if (s % d == 0) {
-      a = -u * n
-      d1 = d
-      a1 /= d1
-      a2 /= d1
-      s /= d1
-    } else {
+    // if (s % d == 0) {
+    //   a = -u * n
+    //   d1 = d
+    //   a1 /= d1
+    //   a2 /= d1
+    //   s /= d1
+    // } else {
       val (u1, v1, d1p) = xgcd(s, d)
       d1 = d1p
 
-      if (d1.abs != 1) {
+      if (d1 != 1) {
 	a1 /= d1
 	a2 /= d1
 	s /= d1
@@ -149,23 +152,22 @@ def nucomp(form1: Qfb, form2: Qfb): Qfb = {
       p2 = c2 % d
       val l = (-u1 * (u * p1 + v * p2)) % d
       a = (l * a1 / d) - (u * n / d)
-    }
+//    }
   }
 
   a %= a1
-  val at = a - a1
-  if (a.abs > at.abs) a = at
-  
   d = a1
   var (dp, v3, vp, v2, z) = pxgcd(d, a, delta4)
   d = dp
   v = vp
   if (z == 0) {
+    // Normal composition.
     g = (v3 * s + c2) / d
     b = a2
     v2 = d1
     a3 = d * b
   } else {
+    // NUCOMP.
     if ((z & 1) == 1) {
       v3 = -v3
       v2 = -v2
@@ -176,7 +178,8 @@ def nucomp(form1: Qfb, form2: Qfb): Qfb = {
     val q4 = q3 - s
     b2 = q3 + q4
     g = q4 / v
-    if (d1.abs != 1) {
+    assert(d1 > 0)
+    if (d1 != 1) {
       v2 *= d1
       v  *= d1
       b2 *= d1
@@ -190,12 +193,12 @@ def nucomp(form1: Qfb, form2: Qfb): Qfb = {
   reduce(Qfb(a3, b3, c3))
 }
 
-//val q = Qfb(11, 4, 5772715433271L)
-val q = Qfb(11, 9, BigInt("48347978850011094692042314858"))
+val q = Qfb(11, 4, 5772715433271L)
+//val q = Qfb(11, 9, BigInt("48347978850011094692042314858"))
 println("1 -> " + q)
 var qp = q
 var i = 2
-while (true) {
+while (qp.a != 1) {
   qp = nucomp(qp, q)
   println("%d -> %s".format(i, qp))
   i += 1
