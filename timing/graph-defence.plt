@@ -8,12 +8,12 @@ set ylabel "Average Time (Nanoseconds)"
 # 64-bit implementation
 set xrange [16:59]
 set output 'compose-64.eps'
-plot "compose-mpz.dat" with lines title "GMP Multiplication", \
-     "compose-pari.dat" with lines title "PARI Multiplication", \
+plot "compose-pari.dat" with lines title "PARI Multiplication", \
+     "compose-mpz.dat" with lines title "GMP Multiplication", \
      "compose-64.dat" with lines title '64-bit Multiplication'
 set output 'square-64.eps'
-plot "square-mpz.dat" with lines title "GMP Squaring", \
-     "square-pari.dat" with lines title "PARI Squaring", \
+plot "square-pari.dat" with lines title "PARI Squaring", \
+     "square-mpz.dat" with lines title "GMP Squaring", \
      "square-64.dat" with lines title '64-bit Squaring'
 set output 'cube-64.eps'
 plot "cube-pari.dat" with lines title "PARI Cubing", \
