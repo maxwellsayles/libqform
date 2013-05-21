@@ -56,6 +56,6 @@ plot 'cube-sqrt-128.dat' with lines title 'Cube (Full Sqrt)', \
 
 set xrange [60:118]
 set output 'smart-cubing-128.eps'
-plot 'cube-128.dat' with lines title 'GMP when divisor >= 2^{64}', \
-     'cube-mixed-mode-arith-128.dat' with lines title 'GMP when prod >= 2^{128}', \
-     'cube-mixed-mode-smart-mod-128.dat' with lines title 'mod when prod >= divisor'
+plot 'cube-128.dat' with lines title 'GMP when divisor ≥ 2^{64}', \
+     'cube-mixed-mode-arith-128.dat' with lines title 'GMP when prod ≥ 2^{128}', \
+     'cube-mixed-mode-smart-mod-128.dat' with lines title 'mod when prod ≥ divisor'
