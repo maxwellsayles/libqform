@@ -1,6 +1,6 @@
 #!/usr/bin/gnuplot -persist
 
-set terminal eps
+set terminal eps enhanced
 set key left
 set xlabel "Bits in Discriminant" 
 set ylabel "Average Time (Nanoseconds)"
@@ -54,4 +54,8 @@ plot 'cube-sqrt-128.dat' with lines title 'Cube (Full Sqrt)', \
      'cube-128.dat' with lines title 'Cube (Approx Sqrt)'
      
 
-     
+set xrange [60:118]
+set output 'smart-cubing-128.eps'
+plot 'cube-128.dat' with lines title 'GMP when divisor >= 2^{64}', \
+     'cube-mixed-mode-arith-128.dat' with lines title 'GMP when prod >= 2^{128}', \
+     'cube-mixed-mode-smart-mod-128.dat' with lines title 'mod when prod >= divisor'
