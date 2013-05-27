@@ -82,15 +82,15 @@ def pxgcd(a: BigInt, b: BigInt, bound: BigInt):
 	c1: BigInt, c0: BigInt,
 	z: Int):
        (BigInt, BigInt, BigInt, BigInt, Int) = {
-    if (r1 < 0) f(-r1, -s1, r0, s0, c1, c0, z)
-    else if (r0 < 0) f(r1, s1, -r0, -s0, c1, c0, z)
+    if (r1 < 0) f(-r1, -s1, r0, s0, -c1, c0, z)
+    else if (r0 < 0) f(r1, s1, -r0, -s0, c1, -c0, z)
     else if (r1 < r0) f(r0, s0, r1, s1, c0, c1, z + 1)
     else if (r0 == 0 || r0 <= bound) {
-      (s1 * r1, s0 * r0, c1, c0, z)
+      (s1 * r1, s0 * r0, s1 * c1, s0 * c0, z)
     } else {
       val k = numBits(r1) - numBits(r0)
       val rp = r1 - (r0 << k)
-      val cp = c1 - ((c0 << k) * s1 * s0)
+      val cp = c1 - (c0 << k)
       f(rp, s1, r0, s0, cp, c0, z)
     }
   }
