@@ -132,27 +132,18 @@ def nucomp(form1: Qfb, form2: Qfb): Qfb = {
     a = -u * n
     d1 = d
   } else {
-    // if (s % d == 0) {
-    //   a = -u * n
-    //   d1 = d
-    //   a1 /= d1
-    //   a2 /= d1
-    //   s /= d1
-    // } else {
-      val (u1, v1, d1p) = xgcd(s, d)
-      d1 = d1p
-
-      if (d1 != 1) {
-	a1 /= d1
-	a2 /= d1
-	s /= d1
-	d /= d1
-      }
-      p1 = c1 % d
-      p2 = c2 % d
-      val l = (-u1 * (u * p1 + v * p2)) % d
-      a = (l * a1 / d) - (u * n / d)
-//    }
+    val (u1, v1, d1p) = xgcd(s, d)
+    d1 = d1p
+    if (d1 != 1) {
+      a1 /= d1
+      a2 /= d1
+      s /= d1
+      d /= d1
+    }
+    p1 = c1 % d
+    p2 = c2 % d
+    val l = (-u1 * (u * p1 + v * p2)) % d
+    a = (l * a1 / d) - (u * n / d)
   }
 
   a %= a1
