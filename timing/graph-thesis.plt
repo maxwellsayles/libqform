@@ -58,3 +58,20 @@ plot "compose_square-pari.dat" with lines title 'PARI Multiply w/ Square', \
      "cube-pari.dat" with lines title 'PARI Cubing'
 set xrange [*:*]
 
+
+# Termination bound.
+set xrange [16:59]
+set output 'compose-sqrt-vs-64.eps'
+plot "compose-sqrt-64.dat" with lines title "Full Square Root", \
+     "compose-64.dat" with lines title "Approximate Square Root"
+set output 'cube-sqrt-vs-64.eps'
+plot "cube-sqrt-64.dat" with lines title "Full Square Root", \
+     "cube-64.dat" with lines title "Approximate Square Root"
+
+set xrange [60:118]
+set output 'compose-sqrt-vs-128.eps'
+plot "compose-sqrt-128.dat" with lines title "Full Square Root", \
+     "compose-128.dat" with lines title "Approximate Square Root"
+set output 'cube-sqrt-vs-128.eps'
+plot "cube-sqrt-128.dat" with lines title "Full Square Root", \
+     "cube-128.dat" with lines title "Approximate Square Root"     
