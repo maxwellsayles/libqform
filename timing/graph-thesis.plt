@@ -1,6 +1,6 @@
 #!/usr/bin/gnuplot -persist
 
-set terminal eps
+set terminal eps enhanced
 set key left
 
 set output 'compose-all.eps'
@@ -74,4 +74,12 @@ plot "compose-sqrt-128.dat" with lines title "Full Square Root", \
      "compose-128.dat" with lines title "Approximate Square Root"
 set output 'cube-sqrt-vs-128.eps'
 plot "cube-sqrt-128.dat" with lines title "Full Square Root", \
-     "cube-128.dat" with lines title "Approximate Square Root"     
+     "cube-128.dat" with lines title "Approximate Square Root"
+
+
+# Smart 128 bit cubing.
+set xrange [60:118]
+set output 'smart-cubing-128.eps'
+plot 'cube-128.dat' with lines title 'GMP when divisor ≥ 2^{64}', \
+     'cube-mixed-mode-arith-128.dat' with lines title 'GMP when product ≥ 2^{128}', \
+     'cube-mixed-mode-smart-mod-128.dat' with lines title 'mod when product ≥ divisor'
