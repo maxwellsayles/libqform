@@ -18,9 +18,9 @@
 #define very_verbose 0
 
 #define time_s64 0
-#define time_s128 0
+#define time_s128 1
 #define time_mpz 0
-#define time_pari 1
+#define time_pari 0
 
 #define qform_groups 1000
 #define qform_ops 1000
@@ -147,7 +147,7 @@ void time_qform_set(qform_timings_t* timings,
   cprintf("Running qform timings for %d bit discriminants.\n", nbits);
 
   // time compose
-  cprintf("Time for %dbit compose-%s: ", nbits, name);
+  cprintf("Time for %d-bit compose-%s: ", nbits, name);
   fflush(stdout);
   gmp_randseed_ui(rands, rand_seed);
   srand(rand_seed);
@@ -173,7 +173,7 @@ void time_qform_set(qform_timings_t* timings,
   cprintf("%"PRIu64" us\n", time);
 
   // time square
-  cprintf("Time for %dbit square-%s: ", nbits, name);
+  cprintf("Time for %d-bit square-%s: ", nbits, name);
   fflush(stdout);
   gmp_randseed_ui(rands, rand_seed);
   srand(rand_seed);
@@ -196,7 +196,7 @@ void time_qform_set(qform_timings_t* timings,
   cprintf("%"PRIu64" us\n", time);
 
   // time cube
-  cprintf("Time for %dbit cube-%s: ", nbits, name);
+  cprintf("Time for %d-bit cube-%s: ", nbits, name);
   fflush(stdout);
   gmp_randseed_ui(rands, rand_seed);
   srand(rand_seed);
