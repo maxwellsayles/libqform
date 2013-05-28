@@ -368,6 +368,7 @@ void s64_qform_compose(s64_qform_group_t* group,
   
   // compute bounds
   bound = (half_rshift_u32(a1/a2)) * group->L;
+  //  bound = sqrt_u32(a1 / a2) * group->L;
   if (a1 <= bound) {
     // normal composition
     C->a = a1 * a2;
@@ -566,8 +567,8 @@ void s64_qform_cube(s64_qform_group_t* group,
   
   // Compute NUCOMP termination bound
   B = (int64_t)group->S * (int64_t)a1;
-  //B >>= 1;
-  //B = sqrt_u64(B);
+  //  B >>= 1;
+  //  B = sqrt_u64(B);
   B >>= ((msb_u64(B)+1)>>1) + 1; // approximate sqrt, (see above two lines)
   B |= !B;  // if (B == 0) B = 1;
   if (L < B) {

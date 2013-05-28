@@ -668,7 +668,9 @@ void s128_qform_compose(s128_qform_group_t* group,
   u += a1 & (u >> 63);  // if (u < 0) u += a1;
   
   // compute bounds
-  bound = half_rshift_u64(a1/a2) * group->L;
+  bound = half_rshift_u64(a1 / a2) * group->L;
+  //  bound = sqrt((double)group->S * (double)a1/(double)a2);
+  //  bound = sqrt_u64(a1 / a2) * group->L;
   if (a1 <= bound) {
     // normal composition
     C->a = a1*a2;
@@ -797,6 +799,49 @@ void s128_qform_square(s128_qform_group_t* group, s128_qform_t* C, const s128_qf
  * www.lirmm.fr/~imbert/pdfs/cubing_amc_2010.pdf
  */
 #if (S128_QFORM_CUBING_STYLE != 1)
+
+// r = (a * b) % m
+// mz should be filled out already.  az and bz will be filled out only if needed.
+static inline void mulmod_mixed(s128_t* r, s128_t* a, s128_t* b, s128_t* m,
+				mpz_t az, mpz_t bz, mpz_t mz, int mbits) {
+  int n = numbits_s128(a) + numbits_s128(b);
+  if (n > 127) {
+    s128_to_mpz(a, az);
+    s128_to_mpz(b, bz);
+    mpz_mul(az, az, bz);
+    if (n >= mbits) {
+      mpz_fdiv_r(az, az, mz);
+    }
+    s128_from_mpz(r, az);
+  } else {
+    mul_s128_s128_s128(r, a, b);
+    if (n >= mbits) {
+      mod_s128_s128_s128(r, r, m);
+    }
+  }
+}
+
+// r = (a * b) % m
+// mz should be filled out already.  az and bz will be filled out only if needed.
+static inline void mulmod_mixed64(s128_t* r, s128_t* a, int64_t b, s128_t* m,
+				  mpz_t az, mpz_t bz, mpz_t mz, int mbits) {
+  int n = numbits_s128(a) + numbits_s64(b);
+  if (n > 127) {
+    mpz_set_s128(az, a);
+    mpz_set_s64(bz, b);
+    mpz_mul(az, az, bz);
+    if (n >= mbits) {
+      mpz_fdiv_r(az, az, mz);
+    }
+    s128_from_mpz(r, az);
+  } else {
+    mul_s128_s128_s64(r, a, b);
+    if (n >= mbits) {
+      mod_s128_s128_s128(r, r, m);
+    }
+  }
+}
+
 static void s128_qform_genuine_cube(s128_qform_group_t* group,
 				    s128_qform_t* R,
 				    const s128_qform_t* A) {
@@ -879,10 +924,25 @@ static void s128_qform_genuine_cube(s128_qform_group_t* group,
       mpz_set_s128(group->tmp2, &L);
       mpz_fdiv_r(group->tmp, group->tmp, group->tmp2);
       mpz_get_s128(&K, group->tmp);
-      // use a positive remainder
       if (cmpzero_s128(&K) < 0) {
 	add_s128_s128(&K, &L);
       }
+      /* // Use mixed mode arithmetic. */
+      /* int Lbits = numbits_s128(&L); */
+      /* s128_to_mpz(&L, group->tmp3); */
+      /* s128_t c_mod_L; */
+      /* mod_s128_s128_s128(&c_mod_L, &c1, &L); */
+      /* mulmod_mixed64(&K, &c_mod_L, a1, &L, group->tmp, group->tmp2, group->tmp3, Lbits); */
+      /* mulmod_mixed64(&K, &K, v1, &L, group->tmp, group->tmp2, group->tmp3, Lbits); */
+      /* sub_s128_s64(&K, b1); */
+      /* neg_s128_s128(&K, &K); */
+      /* mulmod_mixed64(&K, &K, v1, &L, group->tmp, group->tmp2, group->tmp3, Lbits); */
+      /* sub_s128_s64(&K, 2); */
+      /* mulmod_mixed64(&K, &K, v1, &L, group->tmp, group->tmp2, group->tmp3, Lbits); */
+      /* mulmod_mixed(&K, &K, &c_mod_L, &L, group->tmp, group->tmp2, group->tmp3, Lbits); */
+      /* if (cmpzero_s128(&K) < 0) { */
+      /* 	add_s128_s128(&K, &L); */
+      /* } */
     }
   } else {
     // S = u2 (a SP) + v2 (b^2 - ac)
@@ -938,6 +998,18 @@ static void s128_qform_genuine_cube(s128_qform_group_t* group,
       mpz_set_s128(group->tmp2, &L);
       mpz_fdiv_r(group->tmp, group->tmp, group->tmp2);
       mpz_get_s128(&K, group->tmp);
+      /* // Use mixed mode arithmetic. */
+      /* s128_t c_mod_L; */
+      /* mod_s128_s128_s128(&c_mod_L, &c1, &L); */
+      /* mpz_set_s128(group->tmp3, &L); */
+      /* int Lbits = numbits_s128(&L); */
+      /* mulmod_mixed64(&K, &u2_128, v1, &L, group->tmp, group->tmp2, group->tmp3, Lbits); */
+      /* mulmod_mixed64(&K, &K, a1, &L, group->tmp, group->tmp2, group->tmp3, Lbits); */
+      /* mul_s128_s64_s64(&temp, v2, b1); */
+      /* mod_s128_s128_s128(&temp, &temp, &L); */
+      /* add_s128_s128(&K, &temp); */
+      /* mulmod_mixed(&K, &K, &c_mod_L, &L, group->tmp, group->tmp2, group->tmp3, Lbits); */
+      /* neg_s128_s128(&K, &K); */
       if (cmpzero_s128(&K) < 0) {
 	add_s128_s128(&K, &L);
       }
@@ -952,6 +1024,9 @@ static void s128_qform_genuine_cube(s128_qform_group_t* group,
   // of bits.
   mul_s128_s64_s64(&temp, group->S, a1);
   shr_s128_int(&temp, (msb_s128(&temp) + 1) >> 1); // approximate sqrt
+  //  mul_s128_s64_s64(&temp, group->S, a1);
+  //  shr_s128(&temp);
+  //  sqrt_s128_s128(&temp, &temp);
   assert64(&temp, "B");
   B = get_s64_from_s128(&temp);
   B |= !B;
