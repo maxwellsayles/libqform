@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "liboptarith/gcd_binary_l2r.h"
-#include "liboptarith/gcd_brent.h"
+#include "liboptarith/gcd/gcd_binary_l2r.h"
+#include "liboptarith/gcd/gcd_brent.h"
 #include "liboptarith/math32.h"
 #include "liboptarith/math64.h"
 #include "liboptarith/math_mpz.h"
