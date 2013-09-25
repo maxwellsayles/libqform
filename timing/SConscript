@@ -1,19 +1,28 @@
 from glob import glob
 import os
 
-libs = ['rt', 'pari']
+libs = ['rt']
 
 source_files = glob('*.c')
 source_files += ['../../libqform/libqform.a']
 source_files += ['../../liboptarith/liboptarith.a']
 
+# libpari
+if os.path.isfile('/usr/local/lib/libpari.a'):
+    source_files.append('/usr/local/lib/libpari.a')
+elif os.path.isfile('/usr/lib/libpari.a'):
+    source_files.append('/usr/lib/libpari.a')
+else:
+    libs.append('pari')
+    
+# libgmp
 if os.path.isfile('/usr/local/lib/libgmp.a'):
     source_files.append('/usr/local/lib/libgmp.a')
 elif os.path.isfile('/usr/lib/libgmp.a'):
     source_files.append('/usr/lib/libgmp.a')
 else:
     libs.append('gmp')
-	
+
 cpppath = ['../..']
 
 Program(target='time_qforms',
