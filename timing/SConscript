@@ -24,13 +24,14 @@ else:
     else:
         libs.append('pari')
 
+# libgmp
 if os.path.isfile('/usr/local/lib/libgmp.a'):
     source_files.append('/usr/local/lib/libgmp.a')
 elif os.path.isfile('/usr/lib/libgmp.a'):
     source_files.append('/usr/lib/libgmp.a')
 else:
     libs.append('gmp')
-	
+
 Program(target='time_qforms',
         source=source_files,
         CPPPATH=cpppath,
