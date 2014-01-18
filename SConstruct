@@ -1,8 +1,8 @@
 from glob import glob
+import os
 
 ccflags=["-Wall", "-Werror", "-DNDEBUG", "-O3"]
 
-import os
 uname = os.uname()
 if uname[0] == 'Darwin' and uname[4] == 'i386':
 	ccflags.append('-mdynamic-no-pic')
@@ -15,7 +15,6 @@ StaticLibrary(target='qform',
               CPPPATH=['..'],
               CCFLAGS=ccflags)
 
-SConscript('tests/SConstruct')
-SConscript('timing/SConscript')
+SConscript(dirs = ['tests', 'timing'])
 
 

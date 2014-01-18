@@ -1,4 +1,6 @@
+#if !defined(NO_PARI)
 #include <pari/pari.h>
+#endif
 #include <stdarg.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -45,10 +47,9 @@ int cprintf(const char* fmt, ...) {
 
 /// Convert the mpz_t to a string and then to a GEN.
 /// This is inefficient, but works, and isn't timed anyways.
-#if GMP_LIMB_BITS != 64
-#error Only support for 64-bit platforms.
-#endif
+#if !defined(NO_PARI)
 GEN to_gen(mpz_t x) {
+#if GMP_LIMB_BITS == 64
   if (x->_mp_size < 0) {
     printf("Does not support negative integers.\n");
     exit(-1);
@@ -74,11 +75,15 @@ GEN to_gen(mpz_t x) {
     printf("Unsupported integer size.\n");
     exit(-1);
   }
-  //  char c[1024];
-  //  mpz_get_str(c, 10, x);
-  //  GEN y = strtoi(c);
-  //  return y;
+#else
+  // Hack for non 64-bit Intel platforms.
+  char c[1024];
+  mpz_get_str(c, 10, x);
+  GEN y = strtoi(c);
+  return y;
+#endif
 }
+#endif
 
 // gives the time from system on in nanoseconds
 static inline uint64_t current_nanos(void) {
@@ -225,6 +230,7 @@ void time_qform_set(qform_timings_t* timings,
   mpz_clear(D);
 }
 
+#if !defined(NO_PARI)
 void time_pari_set(qform_timings_t* timings,
 		   const int nbits,
 		   const uint64_t rand_seed,
@@ -350,6 +356,7 @@ void time_pari_set(qform_timings_t* timings,
   mpz_qform_group_clear(&qform_group);
   mpz_clear(D);
 }
+#endif
 
 void output_timings(const qform_timings_t* timings, const int j,
 		    const char* compose_file,
